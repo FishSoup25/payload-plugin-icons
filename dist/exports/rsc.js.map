@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/exports/rsc.ts"],"sourcesContent":["// RSC bundle: no client-only icon logic here yet; consumers use `./client` for admin + site icons.\nexport {}\n"],"names":[],"mappings":"AAAA,mGAAmG;AACnG,WAAS"}

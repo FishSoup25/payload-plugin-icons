@@ -37,7 +37,6 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "npm run build",
     "build": "npm run copyfiles && npm run build:types && npm run build:swc",
     "build:next": "next build dev",
     "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
@@ -45,18 +44,23 @@
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
     "dev": "next dev dev -p 2515 --turbo --no-server-fast-refresh",
-    "start": "next start dev -p 2516",
-    "start:prod": "npm run build:next && next start dev -p 2516",
     "dev:generate-importmap": "npm run dev:payload -- generate:importmap",
     "dev:generate-types": "npm run dev:payload -- generate:types",
     "dev:payload": "cross-env PAYLOAD_CONFIG_PATH=./dev/payload.config.ts payload",
     "generate:importmap": "npm run dev:generate-importmap",
     "generate:types": "npm run dev:generate-types",
+    "install:hooks": "simple-git-hooks",
     "lint": "eslint",
-    "lint:fix": "eslint ./src --fix"
+    "lint:fix": "eslint ./src --fix",
+    "prepublishOnly": "npm run clean && npm run build",
+    "prepush": "npm run clean && npm run build",
+    "start": "next start dev -p 2516",
+    "start:prod": "npm run build:next && next start dev -p 2516"
+  },
+  "simple-git-hooks": {
+    "pre-push": "npm run prepush"
   },
   "devDependencies": {
-    "payload-plugin-icons": "file:.",
     "@eslint/eslintrc": "^3.2.0",
     "@payloadcms/db-postgres": "3.80.0",
     "@payloadcms/db-sqlite": "3.80.0",
@@ -79,12 +83,14 @@
     "next": "16.2.1",
     "open": "^10.1.0",
     "payload": "3.80.0",
+    "payload-plugin-icons": "file:.",
     "prettier": "^3.4.2",
     "qs-esm": "7.0.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "rimraf": "3.0.2",
     "sharp": "0.34.2",
+    "simple-git-hooks": "^2.13.1",
     "sort-package-json": "^2.10.0",
     "typescript": "5.7.3"
   },

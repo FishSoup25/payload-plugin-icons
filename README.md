@@ -70,3 +70,5 @@ Admin-only UI lives under `payload-plugin-icons/client` (`IconSelectField`, `Ico
 ## Develop this repo
 
 Clone, copy `dev/.env.example` → `dev/.env` (Postgres + `PAYLOAD_SECRET`), then `npm install` and `npm run dev` (admin at [http://localhost:2515](http://localhost:2515)).
+
+Built output is committed under `dist/` (no build runs on `npm install`). After clone, run `npm run install:hooks` once if you want a Git pre-push hook that runs `npm run clean && npm run build` before every push. CI also checks that `dist/` matches a fresh build.
