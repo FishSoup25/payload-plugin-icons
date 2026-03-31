@@ -51,26 +51,80 @@ function exportKeyToStoredName(exportKey: string): string {
   return exportKey.replace(/Icon$/, '') || exportKey
 }
 
-function getCategoryFromBaseName(baseName: string): string {
-  const m = baseName.match(/^[A-Z][a-z]*/)
-  return m ? m[0] : baseName.slice(0, 1) || 'Other'
+/**
+ * True when `shorter` is a full stored icon name that is the start of `longer`,
+ * and the remainder begins a new PascalCase segment (uppercase letter).
+ * Avoids grouping `App` + first-segment heuristics: only real prefix edges merge icons.
+ */
+function isPascalCaseIconPrefix(shorter: string, longer: string): boolean {
+  if (shorter.length >= longer.length || !longer.startsWith(shorter)) {
+    return false
+  }
+  const next = longer[shorter.length]
+  return next !== undefined && next === next.toUpperCase() && next !== next.toLowerCase()
+}
+
+function shortestNameInList(names: string[]): string {
+  let best = names[0]!
+  for (let i = 1; i < names.length; i++) {
+    const cur = names[i]!
+    if (cur.length < best.length || (cur.length === best.length && cur < best)) {
+      best = cur
+    }
+  }
+  return best
+}
+
+function buildPhosphorCategoryMap(storedNames: string[]): Record<string, string[]> {
+  const parent = new Map<string, string>()
+  for (const n of storedNames) {
+    parent.set(n, n)
+  }
+  function find(x: string): string {
+    let p = parent.get(x)!
+    if (p !== x) {
+      p = find(p)
+      parent.set(x, p)
+    }
+    return p
+  }
+  function union(a: string, b: string): void {
+    const ra = find(a)
+    const rb = find(b)
+    if (ra !== rb) {
+      parent.set(ra, rb)
+    }
+  }
+
+  const byLength = [...storedNames].sort((a, b) => a.length - b.length || a.localeCompare(b))
+  for (const a of byLength) {
+    for (const b of storedNames) {
+      if (isPascalCaseIconPrefix(a, b)) {
+        union(a, b)
+      }
+    }
+  }
+
+  const membersByRoot = new Map<string, string[]>()
+  for (const n of storedNames) {
+    const r = find(n)
+    if (!membersByRoot.has(r)) {
+      membersByRoot.set(r, [])
+    }
+    membersByRoot.get(r)!.push(n)
+  }
+
+  const categoryMap: Record<string, string[]> = {}
+  for (const members of membersByRoot.values()) {
+    const cat = shortestNameInList(members)
+    categoryMap[cat] = [...members].sort()
+  }
+  return categoryMap
 }
 
 const exportKeys = getAllPhosphorIconExportKeys()
 const storedNames = exportKeys.map(exportKeyToStoredName)
-
-const categoryMap: Record<string, string[]> = {}
-for (let i = 0; i < exportKeys.length; i++) {
-  const stored = storedNames[i]
-  const cat = getCategoryFromBaseName(stored)
-  if (!categoryMap[cat]) {
-    categoryMap[cat] = []
-  }
-  categoryMap[cat].push(stored)
-}
-for (const cat of Object.keys(categoryMap)) {
-  categoryMap[cat].sort()
-}
+const categoryMap = buildPhosphorCategoryMap(storedNames)
 
 function getCategoryRepresentative(category: string): string {
   const icons = categoryMap[category]
