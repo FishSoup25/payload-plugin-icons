@@ -1,0 +1,104 @@
+{
+  "name": "payload-plugin-icons",
+  "version": "1.0.0",
+  "description": "Payload CMS plugin: multi-provider icon field (Lucide, Phosphor, extensible) + universal Icon component",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "import": "./dist/exports/client.js",
+      "types": "./dist/exports/client.d.ts",
+      "default": "./dist/exports/client.js"
+    },
+    "./rsc": {
+      "import": "./dist/exports/rsc.js",
+      "types": "./dist/exports/rsc.d.ts",
+      "default": "./dist/exports/rsc.js"
+    },
+    "./providers/lucide": {
+      "import": "./dist/providers/lucide/index.js",
+      "types": "./dist/providers/lucide/index.d.ts",
+      "default": "./dist/providers/lucide/index.js"
+    },
+    "./providers/phosphor": {
+      "import": "./dist/providers/phosphor/index.js",
+      "types": "./dist/providers/phosphor/index.d.ts",
+      "default": "./dist/providers/phosphor/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "npm run copyfiles && npm run build:types && npm run build:swc",
+    "build:next": "next build dev",
+    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
+    "build:types": "tsc --outDir dist --rootDir ./src",
+    "clean": "rimraf {dist,*.tsbuildinfo}",
+    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
+    "dev": "next dev dev -p 2515 --turbo --no-server-fast-refresh",
+    "start": "next start dev -p 2516",
+    "start:prod": "npm run build:next && next start dev -p 2516",
+    "dev:generate-importmap": "npm run dev:payload -- generate:importmap",
+    "dev:generate-types": "npm run dev:payload -- generate:types",
+    "dev:payload": "cross-env PAYLOAD_CONFIG_PATH=./dev/payload.config.ts payload",
+    "generate:importmap": "npm run dev:generate-importmap",
+    "generate:types": "npm run dev:generate-types",
+    "lint": "eslint",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "devDependencies": {
+    "payload-plugin-icons": "file:.",
+    "@eslint/eslintrc": "^3.2.0",
+    "@payloadcms/db-postgres": "3.80.0",
+    "@payloadcms/db-sqlite": "3.80.0",
+    "@payloadcms/eslint-config": "3.28.0",
+    "@payloadcms/next": "3.80.0",
+    "@payloadcms/richtext-lexical": "3.80.0",
+    "@payloadcms/ui": "3.80.0",
+    "@phosphor-icons/react": "2.1.10",
+    "@swc-node/register": "1.10.9",
+    "@swc/cli": "0.6.0",
+    "@types/node": "22.19.9",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "copyfiles": "2.4.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "16.2.1",
+    "graphql": "^16.8.1",
+    "lucide-react": "0.562.0",
+    "next": "16.2.1",
+    "open": "^10.1.0",
+    "payload": "3.80.0",
+    "prettier": "^3.4.2",
+    "qs-esm": "7.0.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "rimraf": "3.0.2",
+    "sharp": "0.34.2",
+    "sort-package-json": "^2.10.0",
+    "typescript": "5.7.3"
+  },
+  "peerDependencies": {
+    "@phosphor-icons/react": ">=2.0.0",
+    "lucide-react": ">=0.400.0",
+    "payload": "^3.37.0",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}

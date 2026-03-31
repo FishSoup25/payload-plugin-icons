@@ -1,0 +1,394 @@
+.icon-select-field {
+  margin-bottom: var(--base);
+  position: relative;
+
+  .field-label-wrapper {
+    margin-bottom: calc(var(--base) / 2);
+  }
+
+  .field-label {
+    font-weight: 600;
+    color: var(--theme-text);
+    font-size: 14px;
+
+    .required {
+      color: var(--theme-error-500);
+      margin-left: 4px;
+    }
+  }
+
+  .icon-provider-row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--base) / 2);
+    margin-bottom: var(--base);
+
+    .icon-provider-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--theme-elevation-600);
+      flex-shrink: 0;
+    }
+
+    .icon-provider-select {
+      flex: 1;
+      min-width: 0;
+      padding: calc(var(--base) * 0.75) var(--base);
+      border: 1px solid var(--theme-elevation-200);
+      border-radius: var(--border-radius-m);
+      background: var(--theme-input-bg);
+      color: var(--theme-text);
+      font-size: 14px;
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+        border-color: var(--theme-elevation-500);
+        box-shadow: 0 0 0 3px var(--theme-elevation-100);
+      }
+
+      &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .icon-search-wrapper {
+    margin-bottom: var(--base);
+  }
+
+  .icon-search-input {
+    width: 100%;
+    padding: var(--base);
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--border-radius-m);
+    background: var(--theme-input-bg);
+    color: var(--theme-text);
+    font-size: 14px;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--theme-elevation-500);
+      box-shadow: 0 0 0 3px var(--theme-elevation-100);
+    }
+
+    &::placeholder {
+      color: var(--theme-elevation-400);
+    }
+  }
+
+  // Placeholder rendered while a DynamicIcon lazy-loads
+  .icon-placeholder-sm {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: var(--theme-elevation-150);
+  }
+
+  .selected-icon-preview {
+    padding: var(--base);
+    background: var(--theme-elevation-50);
+    border-radius: var(--border-radius-m);
+    border: 1px solid var(--theme-elevation-200);
+    margin-bottom: var(--base);
+
+    .preview-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--theme-elevation-500);
+      margin-bottom: calc(var(--base) / 2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .preview-content {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--base) / 2);
+      flex-wrap: wrap;
+
+      .preview-provider-badge {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 4px 8px;
+        border-radius: var(--border-radius-s);
+        background: var(--theme-elevation-200);
+        color: var(--theme-elevation-800);
+        margin-right: 4px;
+      }
+
+      svg {
+        color: var(--theme-elevation-700);
+      }
+
+      .icon-name {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        color: var(--theme-text);
+        font-weight: 500;
+      }
+
+      .clear-button {
+        margin-left: auto;
+        padding: 4px 8px;
+        font-size: 12px;
+        background: var(--theme-error-50);
+        color: var(--theme-error-500);
+        border: 1px solid var(--theme-error-200);
+        border-radius: var(--border-radius-s);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: var(--theme-error-100);
+          border-color: var(--theme-error-300);
+        }
+      }
+    }
+  }
+
+  .icon-picker-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--theme-elevation-0);
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--border-radius-m);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    max-height: 560px;
+
+    // ── Header ─────────────────────────────────────────────────────────────
+    .dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--theme-elevation-200);
+      background: var(--theme-elevation-50);
+      flex-shrink: 0;
+
+      .dropdown-count {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--theme-elevation-500);
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .page-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border: 1px solid var(--theme-elevation-200);
+          border-radius: var(--border-radius-s);
+          background: var(--theme-elevation-0);
+          color: var(--theme-text);
+          font-size: 16px;
+          line-height: 1;
+          cursor: pointer;
+          transition: all 0.15s ease;
+
+          &:hover:not(:disabled) {
+            background: var(--theme-elevation-100);
+            border-color: var(--theme-elevation-400);
+          }
+
+          &:disabled {
+            opacity: 0.35;
+            cursor: default;
+          }
+        }
+
+        .page-info {
+          font-size: 12px;
+          color: var(--theme-elevation-500);
+          min-width: 40px;
+          text-align: center;
+        }
+      }
+    }
+
+    // ── Icon / category grid (reuses the same proven layout) ───────────────
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 4px;
+      padding: 8px;
+      overflow-y: auto;
+      max-height: 320px;
+    }
+
+    // ── Category cell wrapper (positions the variant badge over the card) ──
+    .category-cell {
+      position: relative;
+
+      &.expanded > .icon-option {
+        border-color: var(--theme-elevation-500);
+        background: var(--theme-elevation-50);
+      }
+
+      // Variant count badge — sits in the top-right corner of the card
+      .variant-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 10px;
+        background: var(--theme-elevation-700);
+        color: var(--theme-elevation-0);
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+        transition: background 0.15s ease;
+        z-index: 1;
+
+        &:hover,
+        &.active {
+          background: var(--theme-elevation-900);
+        }
+      }
+    }
+
+    // ── Individual icon tile (unchanged from original) ─────────────────────
+    .icon-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      border: 1px solid var(--theme-elevation-150);
+      border-radius: var(--border-radius-s);
+      background: var(--theme-elevation-0);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      width: 100%;
+
+      svg {
+        color: var(--theme-elevation-600);
+        transition: color 0.15s ease;
+      }
+
+      .icon-option-name {
+        font-size: 10px;
+        color: var(--theme-elevation-500);
+        line-height: 1.2;
+        word-break: break-word;
+        max-width: 100%;
+      }
+
+      &:hover {
+        border-color: var(--theme-elevation-400);
+        background: var(--theme-elevation-50);
+
+        svg {
+          color: var(--theme-elevation-800);
+        }
+      }
+
+      &.selected {
+        border-color: var(--theme-success-500);
+        background: var(--theme-success-50);
+
+        svg {
+          color: var(--theme-success-600);
+        }
+
+        .icon-option-name {
+          color: var(--theme-success-700);
+          font-weight: 600;
+        }
+      }
+    }
+
+    // ── Expanded variants panel (shown below the category grid) ───────────
+    .variants-panel {
+      border-top: 2px solid var(--theme-elevation-300);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+
+      .variants-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 12px;
+        background: var(--theme-elevation-100);
+        flex-shrink: 0;
+
+        .variants-panel-title {
+          font-size: 12px;
+          color: var(--theme-text);
+
+          strong {
+            font-family: 'Monaco', 'Courier New', monospace;
+          }
+
+          .variants-panel-count {
+            color: var(--theme-elevation-500);
+          }
+        }
+
+        .variants-close-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 22px;
+          height: 22px;
+          border: none;
+          background: transparent;
+          color: var(--theme-elevation-500);
+          font-size: 12px;
+          line-height: 1;
+          cursor: pointer;
+          border-radius: var(--border-radius-s);
+          transition: all 0.15s ease;
+
+          &:hover {
+            background: var(--theme-elevation-200);
+            color: var(--theme-text);
+          }
+        }
+      }
+
+      // Reuse .icon-grid for the variants — but limit its height
+      .icon-grid {
+        max-height: 200px;
+        border-top: 1px solid var(--theme-elevation-150);
+      }
+    }
+
+    .no-results {
+      padding: calc(var(--base) * 2);
+      text-align: center;
+      color: var(--theme-elevation-500);
+      font-size: 14px;
+    }
+  }
+
+  .field-description {
+    margin-top: calc(var(--base) / 2);
+    font-size: 13px;
+    color: var(--theme-elevation-500);
+    line-height: 1.4;
+  }
+}

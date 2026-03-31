@@ -1,0 +1,72 @@
+# payload-plugin-icons
+
+[Payload 3](https://payloadcms.com) plugin: pick icons in the admin (Lucide and Phosphor included), store `{ provider, name }`, and render them on the site with a small `Icon` component.
+
+## Install
+
+```bash
+npm install payload-plugin-icons lucide-react @phosphor-icons/react
+```
+
+Requires Payload **^3.37**, React **≥19**, and the icon libraries above as peers.
+
+## Configure
+
+Use `createIconPlugin` so the field and plugin share the same provider list. Set `packageImport` to this package’s name (or your monorepo alias).
+
+```ts
+import { buildConfig } from 'payload'
+import {
+  createIconPlugin,
+  lucideProvider,
+  phosphorProvider,
+} from 'payload-plugin-icons'
+
+const { iconField, iconPlugin } = createIconPlugin({
+  packageImport: 'payload-plugin-icons',
+  providers: [lucideProvider(), phosphorProvider()],
+})
+
+export default buildConfig({
+  plugins: [iconPlugin],
+  collections: [
+    /* ... */
+    {
+      fields: [
+        iconField({
+          name: 'icon',
+          label: 'Icon',
+        }),
+      ],
+    },
+  ],
+})
+```
+
+## Frontend
+
+```tsx
+'use client'
+
+import { Icon } from 'payload-plugin-icons/client'
+import type { IconData } from 'payload-plugin-icons'
+
+export function Hero({ icon }: { icon?: IconData | null }) {
+  return <Icon icon={icon} className="size-6" />
+}
+```
+
+Admin-only UI lives under `payload-plugin-icons/client` (`IconSelectField`, `IconCell`, etc.). Custom providers: register client factories with `registerIconProviderClientFactory` (see `src/providers/registry.ts`).
+
+## Package exports
+
+| Import path | Purpose |
+|-------------|---------|
+| `payload-plugin-icons` | `createIconPlugin`, `iconPlugin`, `iconField`, providers, types |
+| `payload-plugin-icons/client` | Admin components + `Icon` for the browser |
+| `payload-plugin-icons/providers/lucide` | Lucide provider only |
+| `payload-plugin-icons/providers/phosphor` | Phosphor provider only |
+
+## Develop this repo
+
+Clone, copy `dev/.env.example` → `dev/.env` (Postgres + `PAYLOAD_SECRET`), then `npm install` and `npm run dev` (admin at [http://localhost:2515](http://localhost:2515)).
