@@ -56,7 +56,11 @@ export function Hero({ icon }: { icon?: IconData | null }) {
 }
 ```
 
-Admin-only UI lives under `payload-plugin-icons/client` (`IconSelectField`, `IconCell`, etc.). Custom providers: register client factories with `registerIconProviderClientFactory` (see `src/providers/registry.ts`).
+Admin-only UI lives under `payload-plugin-icons/client` (`IconSelectField`, `IconCell`, etc.).
+
+### Custom icon providers
+
+Register client factories with `registerIconProviderClientFactory` (see `src/providers/registry.ts`). Implement `IconProviderClient.resolveIconComponent` using an **eager** module graph — for example `import * as Icons from 'your-pack'` or statically resolvable components. **Do not** wrap each icon in `React.lazy(() => import(...))` or otherwise load one async chunk per icon: the admin picker renders many previews at once, which can overwhelm reverse proxies with hundreds of simultaneous `/_next/static/chunks/...` requests. Built-in Lucide uses a single `import * as LucideReact from 'lucide-react'` lookup; Phosphor uses a namespace import of `@phosphor-icons/react`.
 
 ## Package exports
 

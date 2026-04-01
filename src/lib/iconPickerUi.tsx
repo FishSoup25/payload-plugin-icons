@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactElement, Suspense, useMemo } from 'react'
+import { type ReactElement, useMemo } from 'react'
 
 import type { IconProviderClient } from '../providers/types.js'
 
@@ -69,9 +69,7 @@ function IconCategoryCell({
         title={`Select "${representative}"`}
         type="button"
       >
-        <Suspense fallback={<span className="icon-placeholder-sm" />}>
-          <PickerGlyph client={client} iconName={representative} size={24} />
-        </Suspense>
+        <PickerGlyph client={client} iconName={representative} size={24} />
         <span className="icon-option-name">{category}</span>
       </button>
       {hasVariants && (
@@ -123,9 +121,7 @@ function IconVariantsPanel({
             title={iconName}
             type="button"
           >
-            <Suspense fallback={<span className="icon-placeholder-sm" />}>
-              <PickerGlyph client={client} iconName={iconName} size={24} />
-            </Suspense>
+            <PickerGlyph client={client} iconName={iconName} size={24} />
             <span className="icon-option-name">{iconName}</span>
           </button>
         ))}

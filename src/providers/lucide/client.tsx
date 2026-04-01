@@ -1,16 +1,17 @@
 'use client'
 
+import type { ComponentType } from 'react'
+
+import * as LucideReact from 'lucide-react'
 import dynamicIconImports from 'lucide-react/dynamicIconImports.mjs'
-import { type ComponentType, lazy, Suspense, useMemo } from 'react'
 
 import type { IconGlyphProps, IconProviderClient } from '../types.js'
 
-/** Lucide icon keys from the dynamic import map (avoid `lucide-react/dynamic` — Node breaks on its CJS interop). */
-type IconName = keyof typeof dynamicIconImports
+import { lucideKebabToPascalCase } from '../../lib/lucideCase.js'
 
 const allIconNames = Object.keys(dynamicIconImports)
 
-const categoryMap: Record<string, IconName[]> = {}
+const categoryMap: Record<string, string[]> = {}
 for (const name of allIconNames) {
   const category = String(name).split('-')[0]
   if (!categoryMap[category]) {
@@ -22,7 +23,7 @@ for (const cat of Object.keys(categoryMap)) {
   categoryMap[cat].sort()
 }
 
-function getCategoryRepresentative(category: string): IconName {
+function getCategoryRepresentative(category: string): string {
   const icons = categoryMap[category]
   if (!icons?.length) {
     return category
@@ -30,33 +31,43 @@ function getCategoryRepresentative(category: string): IconName {
   if (icons.includes(category)) {
     return category
   }
-  return icons[0]
+  return icons[0] ?? category
 }
 
-const componentByName = new Map<string, ComponentType<IconGlyphProps>>()
+const lucideNamespace = LucideReact as Record<string, unknown>
 
-function getOrCreateLucideIconComponent(name: string): ComponentType<IconGlyphProps> | null {
+function isLucideGlyphComponent(x: unknown): x is ComponentType<IconGlyphProps> {
+  if (x == null) {
+    return false
+  }
+  if (typeof x === 'function') {
+    return true
+  }
+  return typeof x === 'object' && '$$typeof' in x
+}
+
+/**
+ * Resolve a glyph from one synchronous eager import graph (`import * as LucideReact from 'lucide-react'`).
+ * Do not use `React.lazy` or per-name `import()` here — that causes one network chunk per visible icon in admin.
+ */
+function resolveLucideIconComponent(name: string): ComponentType<IconGlyphProps> | null {
   if (!dynamicIconImports[name]) {
     return null
   }
-  const hit = componentByName.get(name)
-  if (hit) {
-    return hit
+  const pascal = lucideKebabToPascalCase(name)
+  const candidates = [
+    pascal,
+    `${pascal}Icon`,
+    `Lucide${pascal}`,
+    `Lucide${pascal}Icon`,
+  ] as const
+  for (const key of candidates) {
+    const Cmp = lucideNamespace[key]
+    if (isLucideGlyphComponent(Cmp)) {
+      return Cmp
+    }
   }
-  const Loader = dynamicIconImports[name]
-
-  function LucideGlyph(props: IconGlyphProps) {
-    const Cmp = useMemo(() => lazy(Loader), [])
-    return (
-      <Suspense fallback={<span className="icon-placeholder-sm" />}>
-        <Cmp {...props} />
-      </Suspense>
-    )
-  }
-
-  LucideGlyph.displayName = `Lucide(${name})`
-  componentByName.set(name, LucideGlyph)
-  return LucideGlyph
+  return null
 }
 
 export function createLucideClientProvider(
@@ -69,6 +80,6 @@ export function createLucideClientProvider(
     getCategoryRepresentative,
     getIconNames: () => allIconNames as readonly string[],
     label,
-    resolveIconComponent: (name: string) => getOrCreateLucideIconComponent(name),
+    resolveIconComponent: (name: string) => resolveLucideIconComponent(name),
   }
 }

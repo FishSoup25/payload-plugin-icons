@@ -1,7 +1,7 @@
 'use client';
-import { jsx as _jsx } from "react/jsx-runtime";
+import * as LucideReact from 'lucide-react';
 import dynamicIconImports from 'lucide-react/dynamicIconImports.mjs';
-import { lazy, Suspense, useMemo } from 'react';
+import { lucideKebabToPascalCase } from '../../lib/lucideCase.js';
 const allIconNames = Object.keys(dynamicIconImports);
 const categoryMap = {};
 for (const name of allIconNames){
@@ -22,32 +22,39 @@ function getCategoryRepresentative(category) {
     if (icons.includes(category)) {
         return category;
     }
-    return icons[0];
+    return icons[0] ?? category;
 }
-const componentByName = new Map();
-function getOrCreateLucideIconComponent(name) {
+const lucideNamespace = LucideReact;
+function isLucideGlyphComponent(x) {
+    if (x == null) {
+        return false;
+    }
+    if (typeof x === 'function') {
+        return true;
+    }
+    return typeof x === 'object' && '$$typeof' in x;
+}
+/**
+ * Resolve a glyph from one synchronous eager import graph (`import * as LucideReact from 'lucide-react'`).
+ * Do not use `React.lazy` or per-name `import()` here — that causes one network chunk per visible icon in admin.
+ */ function resolveLucideIconComponent(name) {
     if (!dynamicIconImports[name]) {
         return null;
     }
-    const hit = componentByName.get(name);
-    if (hit) {
-        return hit;
+    const pascal = lucideKebabToPascalCase(name);
+    const candidates = [
+        pascal,
+        `${pascal}Icon`,
+        `Lucide${pascal}`,
+        `Lucide${pascal}Icon`
+    ];
+    for (const key of candidates){
+        const Cmp = lucideNamespace[key];
+        if (isLucideGlyphComponent(Cmp)) {
+            return Cmp;
+        }
     }
-    const Loader = dynamicIconImports[name];
-    function LucideGlyph(props) {
-        const Cmp = useMemo(()=>/*#__PURE__*/ lazy(Loader), []);
-        return /*#__PURE__*/ _jsx(Suspense, {
-            fallback: /*#__PURE__*/ _jsx("span", {
-                className: "icon-placeholder-sm"
-            }),
-            children: /*#__PURE__*/ _jsx(Cmp, {
-                ...props
-            })
-        });
-    }
-    LucideGlyph.displayName = `Lucide(${name})`;
-    componentByName.set(name, LucideGlyph);
-    return LucideGlyph;
+    return null;
 }
 export function createLucideClientProvider(id = 'lucide', label = 'Lucide') {
     return {
@@ -56,7 +63,7 @@ export function createLucideClientProvider(id = 'lucide', label = 'Lucide') {
         getCategoryRepresentative,
         getIconNames: ()=>allIconNames,
         label,
-        resolveIconComponent: (name)=>getOrCreateLucideIconComponent(name)
+        resolveIconComponent: (name)=>resolveLucideIconComponent(name)
     };
 }
 

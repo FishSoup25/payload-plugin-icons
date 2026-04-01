@@ -1,6 +1,6 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Suspense, useMemo } from 'react';
+import { useMemo } from 'react';
 import { getProviderClientById } from '../providers/registry.js';
 import './IconCell.scss';
 function mergeCellProps(props) {
@@ -70,16 +70,11 @@ export const IconCell = (props)=>{
     return /*#__PURE__*/ _jsxs("div", {
         className: "icon-cell",
         children: [
-            /*#__PURE__*/ _jsx(Suspense, {
-                fallback: /*#__PURE__*/ _jsx("span", {
-                    className: "icon-placeholder-sm"
-                }),
-                children: Glyph ? /*#__PURE__*/ _jsx(Glyph, {
-                    size: 20,
-                    strokeWidth: 1.5,
-                    weight: "regular"
-                }) : null
-            }),
+            Glyph ? /*#__PURE__*/ _jsx(Glyph, {
+                size: 20,
+                strokeWidth: 1.5,
+                weight: "regular"
+            }) : null,
             /*#__PURE__*/ _jsxs("span", {
                 className: "icon-cell-name",
                 children: [

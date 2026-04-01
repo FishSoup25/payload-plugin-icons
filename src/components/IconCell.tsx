@@ -2,7 +2,7 @@
 
 import type { DefaultCellComponentProps, GroupFieldClient  } from 'payload'
 
-import { type ReactElement, Suspense, useMemo } from 'react'
+import { type ReactElement, useMemo } from 'react'
 
 import type { IconData } from '../types.js'
 
@@ -76,9 +76,7 @@ export const IconCell = (props: IconCellProps): ReactElement => {
 
   return (
     <div className="icon-cell">
-      <Suspense fallback={<span className="icon-placeholder-sm" />}>
-        {Glyph ? <Glyph size={20} strokeWidth={1.5} weight="regular" /> : null}
-      </Suspense>
+      {Glyph ? <Glyph size={20} strokeWidth={1.5} weight="regular" /> : null}
       <span className="icon-cell-name">
         {data.provider} · {data.name}
       </span>

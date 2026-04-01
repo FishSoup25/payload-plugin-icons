@@ -1,6 +1,6 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Suspense, useMemo } from 'react';
+import { useMemo } from 'react';
 const PAGE_SIZE = 100;
 function PickerGlyph({ client, iconName, size }) {
     const Cmp = useMemo(()=>client.resolveIconComponent(iconName), [
@@ -30,15 +30,10 @@ function IconCategoryCell({ category, categoryMap, client, expandedCategory, onS
                 title: `Select "${representative}"`,
                 type: "button",
                 children: [
-                    /*#__PURE__*/ _jsx(Suspense, {
-                        fallback: /*#__PURE__*/ _jsx("span", {
-                            className: "icon-placeholder-sm"
-                        }),
-                        children: /*#__PURE__*/ _jsx(PickerGlyph, {
-                            client: client,
-                            iconName: representative,
-                            size: 24
-                        })
+                    /*#__PURE__*/ _jsx(PickerGlyph, {
+                        client: client,
+                        iconName: representative,
+                        size: 24
                     }),
                     /*#__PURE__*/ _jsx("span", {
                         className: "icon-option-name",
@@ -98,15 +93,10 @@ function IconVariantsPanel({ category, client, onClose, onSelect, selectedValue,
                         title: iconName,
                         type: "button",
                         children: [
-                            /*#__PURE__*/ _jsx(Suspense, {
-                                fallback: /*#__PURE__*/ _jsx("span", {
-                                    className: "icon-placeholder-sm"
-                                }),
-                                children: /*#__PURE__*/ _jsx(PickerGlyph, {
-                                    client: client,
-                                    iconName: iconName,
-                                    size: 24
-                                })
+                            /*#__PURE__*/ _jsx(PickerGlyph, {
+                                client: client,
+                                iconName: iconName,
+                                size: 24
                             }),
                             /*#__PURE__*/ _jsx("span", {
                                 className: "icon-option-name",
