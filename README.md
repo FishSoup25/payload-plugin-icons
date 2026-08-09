@@ -2,6 +2,16 @@
 
 An icon picker field for Payload 3. It stores an icon as `{ provider, name }` and includes a client component for rendering the stored value.
 
+## Sponsor
+
+<div align="center">
+
+<a href="https://brainybuilds.com/" target="_blank" rel="noopener noreferrer"><img src="https://brainybuilds.com/favicon.svg" alt="BrainyBuilds" width="42" height="42" /></a>
+
+`payload-plugin-icons` is sponsored by [BrainyBuilds](https://brainybuilds.com/). Thank you for supporting the project!
+
+</div>
+
 ## Features
 
 - Lucide and Phosphor icon providers

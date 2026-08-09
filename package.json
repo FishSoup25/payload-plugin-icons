@@ -100,6 +100,10 @@
   "bugs": {
     "url": "https://github.com/FishSoup25/payload-plugin-icons/issues"
   },
+  "funding": {
+    "type": "custom",
+    "url": "https://brainybuilds.com/"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   }
