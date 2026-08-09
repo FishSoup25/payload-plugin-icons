@@ -79,15 +79,6 @@
     }
   }
 
-  // Placeholder rendered while a DynamicIcon lazy-loads
-  .icon-placeholder-sm {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: var(--theme-elevation-150);
-  }
-
   .selected-icon-preview {
     padding: var(--base);
     background: var(--theme-elevation-50);
@@ -166,7 +157,6 @@
     flex-direction: column;
     max-height: 560px;
 
-    // ── Header ─────────────────────────────────────────────────────────────
     .dropdown-header {
       display: flex;
       align-items: center;
@@ -222,7 +212,6 @@
       }
     }
 
-    // ── Icon / category grid (reuses the same proven layout) ───────────────
     .icon-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -232,7 +221,6 @@
       max-height: 320px;
     }
 
-    // ── Category cell wrapper (positions the variant badge over the card) ──
     .category-cell {
       position: relative;
 
@@ -241,7 +229,6 @@
         background: var(--theme-elevation-50);
       }
 
-      // Variant count badge — sits in the top-right corner of the card
       .variant-badge {
         position: absolute;
         top: 4px;
@@ -268,7 +255,6 @@
       }
     }
 
-    // ── Individual icon tile (unchanged from original) ─────────────────────
     .icon-option {
       display: flex;
       flex-direction: column;
@@ -320,7 +306,6 @@
       }
     }
 
-    // ── Expanded variants panel (shown below the category grid) ───────────
     .variants-panel {
       border-top: 2px solid var(--theme-elevation-300);
       flex-shrink: 0;
@@ -370,7 +355,6 @@
         }
       }
 
-      // Reuse .icon-grid for the variants — but limit its height
       .icon-grid {
         max-height: 200px;
         border-top: 1px solid var(--theme-elevation-150);

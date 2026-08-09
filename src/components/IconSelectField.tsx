@@ -2,7 +2,7 @@
 
 import type { GroupFieldClientComponent, GroupFieldClientProps } from 'payload'
 
-import { useField } from '@payloadcms/ui'
+import { FieldDescription, FieldLabel, useField } from '@payloadcms/ui'
 import { groupHasName } from 'payload/shared'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -22,8 +22,8 @@ export type IconSelectClientProps = {
  * Props the picker actually receives: Payload group field props plus optional plugin options.
  */
 export type IconSelectFieldProps = {
-    clientProps?: IconSelectClientProps
-  } &
+  clientProps?: IconSelectClientProps
+} &
   GroupFieldClientProps & Partial<IconSelectClientProps>
 
 const noopClient: IconProviderClient = {
@@ -44,17 +44,6 @@ function pickIconClientProps(
     labelsById: props.labelsById ?? nested?.labelsById,
     providerIds: props.providerIds ?? nested?.providerIds,
   }
-}
-
-function fieldLabelText(props: GroupFieldClientProps): string {
-  const { field } = props
-  if (typeof field.label === 'string') {
-    return field.label
-  }
-  if (groupHasName(field)) {
-    return field.name
-  }
-  return 'Icon'
 }
 
 /** `NamedGroupFieldClient` omits `required` in Payload typings; runtime field config may still include it. */
@@ -175,9 +164,9 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
     return activeClient.resolveIconComponent(nameValue)
   }, [activeClient, nameValue])
 
-  const labelText = fieldLabelText(props)
   const required = fieldIsRequired(props)
   const { field } = props
+  const searchInputId = `${path}-icon-search`
 
   if (!activeClient) {
     return <div className="icon-select-field">No icon providers configured.</div>
@@ -186,10 +175,12 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
   return (
     <div className="icon-select-field" ref={dropdownRef}>
       <div className="field-label-wrapper">
-        <label className="field-label">
-          {labelText}
-          {required && <span className="required">*</span>}
-        </label>
+        <FieldLabel
+          htmlFor={searchInputId}
+          label={field.label ?? (groupHasName(field) ? field.name : 'Icon')}
+          path={path}
+          required={required}
+        />
       </div>
 
       <div className="icon-provider-row">
@@ -213,7 +204,9 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
 
       <div className="icon-search-wrapper">
         <input
+          aria-label="Search icons"
           className="icon-search-input"
+          id={searchInputId}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setShowPicker(true)}
           placeholder="Search icons... (e.g., shield, home, user)"
@@ -267,11 +260,11 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
       )}
 
       {field.admin && 'description' in field.admin && field.admin.description && (
-        <div className="field-description">
-          {typeof field.admin.description === 'string'
-            ? field.admin.description
-            : String(field.admin.description)}
-        </div>
+        <FieldDescription
+          className="field-description"
+          description={field.admin.description}
+          path={path}
+        />
       )}
     </div>
   )

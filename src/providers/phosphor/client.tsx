@@ -65,9 +65,9 @@ function isPascalCaseIconPrefix(shorter: string, longer: string): boolean {
 }
 
 function shortestNameInList(names: string[]): string {
-  let best = names[0]!
+  let best = names[0]
   for (let i = 1; i < names.length; i++) {
-    const cur = names[i]!
+    const cur = names[i]
     if (cur.length < best.length || (cur.length === best.length && cur < best)) {
       best = cur
     }

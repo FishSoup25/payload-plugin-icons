@@ -4,5 +4,5 @@ export { IconCell } from '../components/IconCell.js';
 export type { IconCellExtraProps, IconCellProps } from '../components/IconCell.js';
 export { IconSelectField } from '../components/IconSelectField.js';
 export type { IconSelectFieldProps } from '../components/IconSelectField.js';
-export { resolveIconComponentForData } from '../providers/registry.js';
-export type { IconGlyphProps } from '../providers/types.js';
+export { registerIconProviderClientFactory, resolveIconComponentForData, } from '../providers/registry.js';
+export type { IconGlyphProps, IconProviderClient } from '../providers/types.js';

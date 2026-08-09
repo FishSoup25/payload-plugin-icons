@@ -1,6 +1,6 @@
 'use client'
 
-import type { DefaultCellComponentProps, GroupFieldClient  } from 'payload'
+import type { DefaultCellComponentProps, GroupFieldClient } from 'payload'
 
 import { type ReactElement, useMemo } from 'react'
 
@@ -15,8 +15,8 @@ export type IconCellExtraProps = {
 }
 
 export type IconCellProps = {
-    clientProps?: IconCellExtraProps
-  } &
+  clientProps?: IconCellExtraProps
+} &
   DefaultCellComponentProps<GroupFieldClient, IconData | null | undefined> & Partial<IconCellExtraProps>
 
 function mergeCellProps(props: IconCellProps): IconCellExtraProps {

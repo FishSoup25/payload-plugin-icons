@@ -1,6 +1,6 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useField } from '@payloadcms/ui';
+import { FieldDescription, FieldLabel, useField } from '@payloadcms/ui';
 import { groupHasName } from 'payload/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPickerDropdown, PAGE_SIZE, useIconPickerSearch } from '../lib/iconPickerUi.js';
@@ -20,16 +20,6 @@ function pickIconClientProps(props) {
         labelsById: props.labelsById ?? nested?.labelsById,
         providerIds: props.providerIds ?? nested?.providerIds
     };
-}
-function fieldLabelText(props) {
-    const { field } = props;
-    if (typeof field.label === 'string') {
-        return field.label;
-    }
-    if (groupHasName(field)) {
-        return field.name;
-    }
-    return 'Icon';
 }
 /** `NamedGroupFieldClient` omits `required` in Payload typings; runtime field config may still include it. */ function fieldIsRequired(props) {
     const { field } = props;
@@ -142,9 +132,9 @@ export const IconSelectField = (props)=>{
         activeClient,
         nameValue
     ]);
-    const labelText = fieldLabelText(props);
     const required = fieldIsRequired(props);
     const { field } = props;
+    const searchInputId = `${path}-icon-search`;
     if (!activeClient) {
         return /*#__PURE__*/ _jsx("div", {
             className: "icon-select-field",
@@ -157,15 +147,11 @@ export const IconSelectField = (props)=>{
         children: [
             /*#__PURE__*/ _jsx("div", {
                 className: "field-label-wrapper",
-                children: /*#__PURE__*/ _jsxs("label", {
-                    className: "field-label",
-                    children: [
-                        labelText,
-                        required && /*#__PURE__*/ _jsx("span", {
-                            className: "required",
-                            children: "*"
-                        })
-                    ]
+                children: /*#__PURE__*/ _jsx(FieldLabel, {
+                    htmlFor: searchInputId,
+                    label: field.label ?? (groupHasName(field) ? field.name : 'Icon'),
+                    path: path,
+                    required: required
                 })
             }),
             /*#__PURE__*/ _jsxs("div", {
@@ -192,7 +178,9 @@ export const IconSelectField = (props)=>{
             /*#__PURE__*/ _jsx("div", {
                 className: "icon-search-wrapper",
                 children: /*#__PURE__*/ _jsx("input", {
+                    "aria-label": "Search icons",
                     className: "icon-search-input",
+                    id: searchInputId,
                     onChange: (e)=>setSearch(e.target.value),
                     onFocus: ()=>setShowPicker(true),
                     placeholder: "Search icons... (e.g., shield, home, user)",
@@ -252,9 +240,10 @@ export const IconSelectField = (props)=>{
                 totalMatchingIcons: totalMatchingIcons,
                 totalPages: totalPages
             }),
-            field.admin && 'description' in field.admin && field.admin.description && /*#__PURE__*/ _jsx("div", {
+            field.admin && 'description' in field.admin && field.admin.description && /*#__PURE__*/ _jsx(FieldDescription, {
                 className: "field-description",
-                children: typeof field.admin.description === 'string' ? field.admin.description : String(field.admin.description)
+                description: field.admin.description,
+                path: path
             })
         ]
     });

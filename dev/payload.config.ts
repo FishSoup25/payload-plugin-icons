@@ -1,5 +1,4 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import {
@@ -7,7 +6,6 @@ import {
   lucideProvider,
   phosphorProvider,
 } from 'payload-plugin-icons'
-import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { testEmailAdapter } from './helpers/testEmailAdapter'
@@ -58,13 +56,6 @@ export default buildConfig({
         singular: 'Icon display',
       },
     },
-    {
-      slug: 'media',
-      fields: [],
-      upload: {
-        staticDir: path.resolve(dirname, 'media'),
-      },
-    },
   ],
   db: postgresAdapter({
     pool: {
@@ -72,11 +63,9 @@ export default buildConfig({
     },
     push: true,
   }),
-  editor: lexicalEditor(),
   email: testEmailAdapter,
   plugins: [iconPlugin],
   secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
-  sharp,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

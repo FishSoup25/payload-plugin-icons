@@ -1,63 +1,51 @@
-import { iconField as buildIconField, setIconPluginPackageImportSpecifier } from './fields/iconField.js';
+import { iconField as buildIconField } from './fields/iconField.js';
 import { lucideProvider } from './providers/lucide/index.js';
 import { phosphorProvider } from './providers/phosphor/index.js';
-export { iconField, setIconPluginPackageImportSpecifier } from './fields/iconField.js';
+export { iconField } from './fields/iconField.js';
 export { lucideProvider } from './providers/lucide/index.js';
 export { phosphorProvider } from './providers/phosphor/index.js';
-export { registerIconProviderClientFactory } from './providers/registry.js';
 const defaultProviders = ()=>[
         lucideProvider(),
         phosphorProvider()
     ];
+function validateProviders(providers) {
+    if (providers.length === 0) {
+        throw new Error('[payload-plugin-icons] at least one provider is required');
+    }
+    if (providers.some(({ id, label })=>id.trim() === '' || label.trim() === '')) {
+        throw new Error('[payload-plugin-icons] provider ids and labels cannot be empty');
+    }
+    if (new Set(providers.map(({ id })=>id)).size !== providers.length) {
+        throw new Error('[payload-plugin-icons] provider ids must be unique');
+    }
+}
 /**
- * Payload plugin: configures package import path used in admin component specifiers
- * and validates provider list. Register the same providers in each `iconField` (or use `createIconPlugin`).
- */ export function iconPlugin(pluginOptions = {
-    providers: defaultProviders()
-}) {
-    const { providers = defaultProviders(), packageImport = 'payload-plugin-icons', disabled = false } = pluginOptions;
-    return (config)=>{
-        setIconPluginPackageImportSpecifier(packageImport);
-        if (disabled) {
-            return config;
-        }
-        const incomingOnInit = config.onInit;
-        config.onInit = async (payload)=>{
-            if (incomingOnInit) {
-                await incomingOnInit(payload);
-            }
-            if (process.env.NODE_ENV === 'development') {
-                const ids = new Set(providers.map((p)=>p.id));
-                if (ids.size !== providers.length) {
-                    // eslint-disable-next-line no-console
-                    console.warn('[iconPlugin] Duplicate provider ids in iconPlugin({ providers })');
-                }
-            }
-        };
-        return config;
-    };
+ * Payload plugin that validates the configured icon providers.
+ * Use `createIconPlugin` to keep this configuration in sync with icon fields.
+ */ export function iconPlugin(pluginOptions = {}) {
+    validateProviders(pluginOptions.providers ?? defaultProviders());
+    return (config)=>config;
 }
 /**
  * Returns a matched pair of `iconPlugin` and `iconField` so provider ids/labels stay in sync.
- */ export function createIconPlugin(options) {
-    const { providers, packageImport = 'payload-plugin-icons', disabled = false } = options;
+ */ export function createIconPlugin(options = {}) {
+    const { packageImport = 'payload-plugin-icons', providers = defaultProviders() } = options;
+    validateProviders(providers);
     const providerIds = providers.map((p)=>p.id);
     const labelsById = Object.fromEntries(providers.map((p)=>[
             p.id,
             p.label
         ]));
     return {
-        iconPlugin: iconPlugin({
-            providers,
-            packageImport,
-            disabled
-        }),
         iconField: (fieldOptions)=>buildIconField({
                 ...fieldOptions,
+                labelsById: fieldOptions.labelsById ?? labelsById,
                 packageImport: fieldOptions.packageImport ?? packageImport,
-                providerIds: fieldOptions.providerIds ?? providerIds,
-                labelsById: fieldOptions.labelsById ?? labelsById
-            })
+                providerIds: fieldOptions.providerIds ?? providerIds
+            }),
+        iconPlugin: iconPlugin({
+            providers
+        })
     };
 }
 

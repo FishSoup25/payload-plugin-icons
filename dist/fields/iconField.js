@@ -2,75 +2,82 @@ const DEFAULT_PROVIDER_IDS = [
     'lucide',
     'phosphor'
 ];
-/** Set by iconPlugin at build time (same process as buildConfig). */ let packageImportSpecifier = 'payload-plugin-icons';
-export function setIconPluginPackageImportSpecifier(spec) {
-    packageImportSpecifier = spec;
-}
-export function getIconPluginPackageImportSpecifier() {
-    return packageImportSpecifier;
+const DEFAULT_PACKAGE_IMPORT = 'payload-plugin-icons';
+function assertValidProviderIds(providerIds, defaultProviderId) {
+    if (providerIds.length === 0) {
+        throw new Error('[payload-plugin-icons] iconField requires at least one provider');
+    }
+    if (providerIds.some((id)=>id.trim() === '')) {
+        throw new Error('[payload-plugin-icons] provider ids cannot be empty');
+    }
+    if (new Set(providerIds).size !== providerIds.length) {
+        throw new Error('[payload-plugin-icons] provider ids must be unique');
+    }
+    if (!providerIds.includes(defaultProviderId)) {
+        throw new Error(`[payload-plugin-icons] default provider "${defaultProviderId}" is not enabled for field`);
+    }
 }
 export function iconField(options) {
-    const { name, label, required, providerIds = [
+    const { name, admin: adminOverride, providerIds = [
         ...DEFAULT_PROVIDER_IDS
-    ], labelsById, defaultProviderId = providerIds[0], packageImport: packageImportOverride, admin: adminOverride } = options;
-    const spec = packageImportOverride ?? packageImportSpecifier;
-    const clientPath = `${spec}/client#IconSelectField`;
-    const cellPath = `${spec}/client#IconCell`;
-    const defaultValue = defaultProviderId && providerIds.includes(defaultProviderId) ? {
-        provider: defaultProviderId,
-        name: ''
-    } : {
-        provider: providerIds[0] ?? 'lucide',
-        name: ''
-    };
+    ], defaultProviderId = providerIds[0], label, labelsById, packageImport = DEFAULT_PACKAGE_IMPORT, required } = options;
+    if (!packageImport.trim()) {
+        throw new Error('[payload-plugin-icons] packageImport cannot be empty');
+    }
+    if (!defaultProviderId) {
+        throw new Error('[payload-plugin-icons] iconField requires a default provider');
+    }
+    assertValidProviderIds(providerIds, defaultProviderId);
+    const clientPath = `${packageImport}/client#IconSelectField`;
+    const cellPath = `${packageImport}/client#IconCell`;
+    const { components: adminComponents, ...admin } = adminOverride ?? {};
     return {
         name,
         type: 'group',
-        label,
-        required,
-        ...defaultValue.provider ? {
-            defaultValue: {
-                provider: defaultValue.provider,
-                name: defaultValue.name
+        admin: {
+            ...admin,
+            components: {
+                ...adminComponents,
+                Cell: {
+                    clientProps: {
+                        labelsById,
+                        providerIds
+                    },
+                    path: cellPath
+                },
+                Field: {
+                    clientProps: {
+                        labelsById,
+                        providerIds
+                    },
+                    path: clientPath
+                }
             }
-        } : {},
+        },
+        defaultValue: {
+            name: '',
+            provider: defaultProviderId
+        },
         fields: [
             {
                 name: 'provider',
                 type: 'text',
-                required: true,
                 admin: {
                     hidden: true
-                }
+                },
+                required: true
             },
             {
                 name: 'name',
                 type: 'text',
-                required: Boolean(required),
                 admin: {
                     hidden: true
-                }
+                },
+                required: Boolean(required)
             }
         ],
-        admin: {
-            ...adminOverride,
-            components: {
-                Field: {
-                    path: clientPath,
-                    clientProps: {
-                        providerIds,
-                        labelsById
-                    }
-                },
-                Cell: {
-                    path: cellPath,
-                    clientProps: {
-                        providerIds,
-                        labelsById
-                    }
-                }
-            }
-        }
+        label,
+        required
     };
 }
 

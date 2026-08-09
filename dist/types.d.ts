@@ -1,47 +1,46 @@
-import type { Config, Field, GroupField } from 'payload';
-/** Registered in `iconPlugin({ providers: [...] })`. */
+import type { Field, GroupField, Plugin } from 'payload';
+/** Server-side metadata for an icon provider. */
 export type IconProviderServerConfig = {
     id: string;
     label: string;
 };
 /** Value stored for an icon in the database (group field shape). */
 export type IconData = {
+    name?: null | string;
     provider: string;
-    name?: string | null;
 };
 export type IconFieldOptions = {
-    name: string;
+    admin?: GroupField['admin'];
+    /** Default provider when empty (first in providerIds if omitted). */
+    defaultProviderId?: string;
     label?: GroupField['label'];
-    required?: boolean;
+    /** Labels shown in the provider dropdown, keyed by provider id. */
+    labelsById?: Record<string, string>;
+    name: string;
     /**
-     * Provider ids enabled for this field. Must match ids passed to `iconPlugin({ providers })`.
+     * Package name or alias used in Payload's admin component paths.
+     * Defaults to `payload-plugin-icons`.
+     */
+    packageImport?: string;
+    /**
+     * Provider ids enabled for this field.
      * Defaults to `['lucide', 'phosphor']`.
      */
     providerIds?: string[];
-    /** Admin/provider dropdown labels (should match `iconPlugin({ providers })` labels). */
-    labelsById?: Record<string, string>;
-    /** Default provider when empty (first in providerIds if omitted). */
-    defaultProviderId?: string;
-    /**
-     * NPM/import specifier for admin component paths (e.g. dev alias).
-     * If omitted, uses the value set by `iconPlugin` via `setIconPluginPackageImportSpecifier` (must be set before `iconField()` runs — see dev `payload.config.ts`).
-     */
-    packageImport?: string;
-    admin?: Field['admin'];
+    required?: boolean;
 };
 export type IconPluginOptions = {
-    providers: IconProviderServerConfig[];
-    /**
-     * Optional NPM/import specifier used in admin component paths.
-     * Dev apps should use their tsconfig alias (e.g. `plugin-package-name-placeholder`).
-     */
-    packageImport?: string;
-    disabled?: boolean;
+    providers?: IconProviderServerConfig[];
 };
-/** Result of createIconPlugin: pre-bound field helper + plugin. */
+export type CreateIconPluginOptions = {
+    /** Package name or alias used in Payload's generated admin import map. */
+    packageImport?: string;
+} & IconPluginOptions;
+/** A Payload plugin and a field factory bound to the same providers. */
 export type CreateIconPluginResult = {
-    iconPlugin: (config: Config) => Config;
-    iconField: (options: Omit<IconFieldOptions, 'providerIds'> & {
+    iconField: (options: {
+        labelsById?: Record<string, string>;
         providerIds?: string[];
-    }) => Field;
+    } & Omit<IconFieldOptions, 'labelsById' | 'providerIds'>) => Field;
+    iconPlugin: Plugin;
 };

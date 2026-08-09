@@ -199,20 +199,12 @@ export function useIconPickerSearch(client, search) {
             };
         }
         const lower = search.toLowerCase();
-        const matched = new Set();
-        for (const name of allIconNames){
-            if (!String(name).toLowerCase().includes(lower)) {
-                continue;
-            }
-            for (const c of Object.keys(categoryMap)){
-                if (categoryMap[c].includes(name)) {
-                    matched.add(c);
-                    break;
-                }
-            }
-        }
-        const matchingCategories = Array.from(matched).sort();
-        const totalMatchingIcons = allIconNames.filter((n)=>String(n).toLowerCase().includes(lower)).length;
+        let totalMatchingIcons = 0;
+        const matchingCategories = Object.entries(categoryMap).filter(([, iconNames])=>{
+            const matchCount = iconNames.filter((name)=>name.toLowerCase().includes(lower)).length;
+            totalMatchingIcons += matchCount;
+            return matchCount > 0;
+        }).map(([category])=>category).sort();
         return {
             matchingCategories,
             totalMatchingIcons
