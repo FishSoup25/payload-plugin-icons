@@ -141,7 +141,7 @@ npm ci
 npm run dev
 ```
 
-Copy `dev/.env.example` to `dev/.env`, then set `DATABASE_URL` and `PAYLOAD_SECRET`. The development admin runs at `http://localhost:2515`.
+The development app uses a local SQLite database at `dev/payload.db`, so no external database is required. You can optionally copy `dev/.env.example` to `dev/.env` to set `PAYLOAD_SECRET` or override `DATABASE_URL`. The development admin runs at `http://localhost:2515`.
 
 Useful commands:
 

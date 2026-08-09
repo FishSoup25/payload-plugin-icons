@@ -14,6 +14,11 @@
 /.tmp
 /*.tgz
 
+# tool caches
+.eslintcache
+.swc/
+.turbo/
+
 # next.js
 .next/
 /out/
@@ -23,16 +28,19 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # local env files
 .env*.local
 dev/.env
+dev/payload.db*
 
 # vercel
 .vercel

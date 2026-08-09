@@ -1,4 +1,4 @@
-import { postgresAdapter } from '@payloadcms/db-postgres'
+import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import path from 'path'
 import { buildConfig } from 'payload'
 import {
@@ -57,9 +57,9 @@ export default buildConfig({
       },
     },
   ],
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
+  db: sqliteAdapter({
+    client: {
+      url: process.env.DATABASE_URL || 'file:./dev/payload.db',
     },
     push: true,
   }),

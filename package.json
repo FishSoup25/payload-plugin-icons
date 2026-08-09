@@ -54,7 +54,7 @@
     "start:prod": "npm run build:next && next start dev -p 2516"
   },
   "devDependencies": {
-    "@payloadcms/db-postgres": "3.80.0",
+    "@payloadcms/db-sqlite": "3.80.0",
     "@payloadcms/eslint-config": "3.28.0",
     "@payloadcms/next": "3.80.0",
     "@payloadcms/ui": "3.80.0",
