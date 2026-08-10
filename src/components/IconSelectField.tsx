@@ -6,10 +6,16 @@ import { FieldDescription, FieldLabel, useField } from '@payloadcms/ui'
 import { groupHasName } from 'payload/shared'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { IconProviderClient } from '../providers/types.js'
+import type { IconCatalog } from '../providers/types.js'
 
-import { IconPickerDropdown, PAGE_SIZE, useIconPickerSearch } from '../lib/iconPickerUi.js'
-import { getProviderClients } from '../providers/registry.js'
+import {
+  IconPickerDropdown,
+  type IconProviderCatalogClient,
+  PAGE_SIZE,
+  useIconPickerSearch,
+} from '../lib/iconPickerUi.js'
+import { useIconCatalog } from '../providers/clientApi.js'
+import { Icon } from './Icon.js'
 import './IconSelectField.scss'
 
 /** Serialized `clientProps` from `iconField()` (also merged onto root props by the admin). */
@@ -26,13 +32,28 @@ export type IconSelectFieldProps = {
 } &
   GroupFieldClientProps & Partial<IconSelectClientProps>
 
-const noopClient: IconProviderClient = {
+const noopClient: IconProviderCatalogClient = {
   id: 'noop',
   getCategoryMap: () => ({}),
   getCategoryRepresentative: (c) => c,
   getIconNames: () => [],
   label: 'noop',
-  resolveIconComponent: () => null,
+}
+
+function catalogClient(id: string, label: string, catalog?: IconCatalog): IconProviderCatalogClient {
+  const categoryMap: Record<string, string[]> = {}
+  for (const icon of catalog?.icons ?? []) {
+    const category = icon.category ?? icon.name
+    categoryMap[category] ??= []
+    categoryMap[category].push(icon.name)
+  }
+  return {
+    id,
+    getCategoryMap: () => categoryMap,
+    getCategoryRepresentative: (category) => categoryMap[category]?.includes(category) ? category : (categoryMap[category]?.[0] ?? category),
+    getIconNames: () => catalog?.icons.map(({ name }) => name) ?? [],
+    label,
+  }
 }
 
 function pickIconClientProps(
@@ -59,10 +80,10 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
   const { path, readOnly } = props
   const { labelsById, providerIds = ['lucide', 'phosphor'] } = pickIconClientProps(props)
 
-  const providers = useMemo(
-    () => getProviderClients(providerIds, labelsById),
-    [providerIds, labelsById],
-  )
+  const providers = useMemo(() => providerIds.map((id) => ({
+    id,
+    label: labelsById?.[id] ?? ({ lucide: 'Lucide', phosphor: 'Phosphor' } as Record<string, string>)[id] ?? id,
+  })), [providerIds, labelsById])
 
   const providerPath = `${path}.provider`
   const namePath = `${path}.name`
@@ -83,10 +104,11 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
   }, [providerValue, setProvider, firstId])
 
   const activeProviderId = providerValue || firstId
-  const activeClient: IconProviderClient | undefined = useMemo(
-    () => providers.find((p) => p.id === activeProviderId) ?? providers[0],
-    [providers, activeProviderId],
-  )
+  const catalog = useIconCatalog(activeProviderId)
+  const activeProvider = providers.find((provider) => provider.id === activeProviderId) ?? providers[0]
+  const activeClient = useMemo(() => activeProvider
+    ? catalogClient(activeProvider.id, activeProvider.label, catalog)
+    : noopClient, [activeProvider, catalog])
 
   const [search, setSearch] = useState('')
   const [showPicker, setShowPicker] = useState(false)
@@ -95,7 +117,7 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const { matchingCategories, totalMatchingIcons } = useIconPickerSearch(
-    activeClient ?? providers[0] ?? noopClient,
+    activeClient,
     search,
   )
 
@@ -146,7 +168,7 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
   const categoryMap = useMemo(() => activeClient?.getCategoryMap() ?? {}, [activeClient])
 
   const expandedVariants = useMemo((): string[] => {
-    if (!expandedCategory || !activeClient) {
+    if (!expandedCategory) {
       return []
     }
     const icons = categoryMap[expandedCategory] ?? []
@@ -155,20 +177,13 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
     }
     const lower = search.toLowerCase()
     return icons.filter((n) => String(n).toLowerCase().includes(lower))
-  }, [expandedCategory, search, activeClient, categoryMap])
-
-  const PreviewCmp = useMemo(() => {
-    if (!nameValue || !activeClient) {
-      return null
-    }
-    return activeClient.resolveIconComponent(nameValue)
-  }, [activeClient, nameValue])
+  }, [expandedCategory, search, categoryMap])
 
   const required = fieldIsRequired(props)
   const { field } = props
   const searchInputId = `${path}-icon-search`
 
-  if (!activeClient) {
+  if (!activeProvider) {
     return <div className="icon-select-field">No icon providers configured.</div>
   }
 
@@ -221,9 +236,12 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
           <div className="preview-label">Selected icon</div>
           <div className="preview-content">
             <span className="preview-provider-badge">{activeClient.label}</span>
-            {PreviewCmp ? (
-              <PreviewCmp size={32} strokeWidth={1.5} weight="regular" />
-            ) : null}
+            <Icon
+              icon={{ name: nameValue, provider: activeProviderId }}
+              size={32}
+              strokeWidth={1.5}
+              weight="regular"
+            />
             <span className="icon-name">{nameValue}</span>
             {!readOnly && (
               <button

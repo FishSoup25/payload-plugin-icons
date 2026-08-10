@@ -1,6 +1,6 @@
 {
   "name": "payload-plugin-icons",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Icon picker field for Payload CMS with Lucide and Phosphor providers.",
   "license": "MIT",
   "type": "module",
@@ -39,7 +39,7 @@
     "build:next": "next build dev",
     "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths --copy-files",
     "build:types": "tsc --outDir dist --rootDir ./src",
-    "check": "npm run lint && npm run clean && npm run build",
+    "check": "npm run lint && npm run clean && npm run build && npm run test:providers",
     "clean": "node scripts/clean.mjs",
     "dev": "next dev dev -p 2515 --turbo --no-server-fast-refresh",
     "dev:generate-importmap": "npm run dev:payload -- generate:importmap",
@@ -51,7 +51,8 @@
     "lint:fix": "eslint ./src --fix",
     "prepublishOnly": "npm run check",
     "start": "next start dev -p 2516",
-    "start:prod": "npm run build:next && next start dev -p 2516"
+    "start:prod": "npm run build:next && next start dev -p 2516",
+    "test:providers": "node scripts/verify-providers.mjs"
   },
   "devDependencies": {
     "@payloadcms/db-sqlite": "3.80.0",

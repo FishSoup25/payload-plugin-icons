@@ -1,22 +1,17 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo } from 'react';
+import { SerializedIconSvg } from '../components/Icon.js';
+import { useIconDefinitions } from '../providers/clientApi.js';
 const PAGE_SIZE = 100;
-function PickerGlyph({ client, iconName, size }) {
-    const Cmp = useMemo(()=>client.resolveIconComponent(iconName), [
-        client,
-        iconName
-    ]);
-    if (!Cmp) {
-        return null;
-    }
-    return /*#__PURE__*/ _jsx(Cmp, {
+function PickerGlyph({ definition, size }) {
+    return definition ? /*#__PURE__*/ _jsx(SerializedIconSvg, {
+        definition: definition,
         size: size,
-        strokeWidth: 1.5,
-        weight: "regular"
-    });
+        strokeWidth: 1.5
+    }) : null;
 }
-function IconCategoryCell({ category, categoryMap, client, expandedCategory, onSelect, onToggleExpand, selectedValue }) {
+function IconCategoryCell({ category, categoryMap, client, definitions, expandedCategory, onSelect, onToggleExpand, selectedValue }) {
     const icons = categoryMap[category] ?? [];
     const representative = client.getCategoryRepresentative(category);
     const hasVariants = icons.length > 1;
@@ -31,8 +26,7 @@ function IconCategoryCell({ category, categoryMap, client, expandedCategory, onS
                 type: "button",
                 children: [
                     /*#__PURE__*/ _jsx(PickerGlyph, {
-                        client: client,
-                        iconName: representative,
+                        definition: definitions[representative],
                         size: 24
                     }),
                     /*#__PURE__*/ _jsx("span", {
@@ -51,7 +45,7 @@ function IconCategoryCell({ category, categoryMap, client, expandedCategory, onS
         ]
     });
 }
-function IconVariantsPanel({ category, client, onClose, onSelect, selectedValue, variants }) {
+function IconVariantsPanel({ category, definitions, onClose, onSelect, selectedValue, variants }) {
     return /*#__PURE__*/ _jsxs("div", {
         className: "variants-panel",
         children: [
@@ -94,8 +88,7 @@ function IconVariantsPanel({ category, client, onClose, onSelect, selectedValue,
                         type: "button",
                         children: [
                             /*#__PURE__*/ _jsx(PickerGlyph, {
-                                client: client,
-                                iconName: iconName,
+                                definition: definitions[iconName],
                                 size: 24
                             }),
                             /*#__PURE__*/ _jsx("span", {
@@ -112,6 +105,15 @@ export function IconPickerDropdown({ client, expandedCategory, expandedVariants,
     const categoryMap = useMemo(()=>client.getCategoryMap(), [
         client
     ]);
+    const visibleNames = useMemo(()=>[
+            ...paginatedCategories.map((category)=>client.getCategoryRepresentative(category)),
+            ...expandedVariants
+        ], [
+        client,
+        expandedVariants,
+        paginatedCategories
+    ]);
+    const definitions = useIconDefinitions(client.id, visibleNames, 'regular');
     return /*#__PURE__*/ _jsxs("div", {
         className: "icon-picker-dropdown",
         children: [
@@ -162,6 +164,7 @@ export function IconPickerDropdown({ client, expandedCategory, expandedVariants,
                         category: category,
                         categoryMap: categoryMap,
                         client: client,
+                        definitions: definitions,
                         expandedCategory: expandedCategory,
                         onSelect: onSelect,
                         onToggleExpand: onToggleExpand,
@@ -170,7 +173,7 @@ export function IconPickerDropdown({ client, expandedCategory, expandedVariants,
             }),
             expandedCategory && /*#__PURE__*/ _jsx(IconVariantsPanel, {
                 category: expandedCategory,
-                client: client,
+                definitions: definitions,
                 onClose: onCloseVariants,
                 onSelect: onSelect,
                 selectedValue: selectedValue,

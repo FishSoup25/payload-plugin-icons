@@ -4,16 +4,31 @@ import { FieldDescription, FieldLabel, useField } from '@payloadcms/ui';
 import { groupHasName } from 'payload/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPickerDropdown, PAGE_SIZE, useIconPickerSearch } from '../lib/iconPickerUi.js';
-import { getProviderClients } from '../providers/registry.js';
+import { useIconCatalog } from '../providers/clientApi.js';
+import { Icon } from './Icon.js';
 import './IconSelectField.scss';
 const noopClient = {
     id: 'noop',
     getCategoryMap: ()=>({}),
     getCategoryRepresentative: (c)=>c,
     getIconNames: ()=>[],
-    label: 'noop',
-    resolveIconComponent: ()=>null
+    label: 'noop'
 };
+function catalogClient(id, label, catalog) {
+    const categoryMap = {};
+    for (const icon of catalog?.icons ?? []){
+        const category = icon.category ?? icon.name;
+        categoryMap[category] ??= [];
+        categoryMap[category].push(icon.name);
+    }
+    return {
+        id,
+        getCategoryMap: ()=>categoryMap,
+        getCategoryRepresentative: (category)=>categoryMap[category]?.includes(category) ? category : categoryMap[category]?.[0] ?? category,
+        getIconNames: ()=>catalog?.icons.map(({ name })=>name) ?? [],
+        label
+    };
+}
 function pickIconClientProps(props) {
     const nested = props.clientProps;
     return {
@@ -34,7 +49,13 @@ export const IconSelectField = (props)=>{
         'lucide',
         'phosphor'
     ] } = pickIconClientProps(props);
-    const providers = useMemo(()=>getProviderClients(providerIds, labelsById), [
+    const providers = useMemo(()=>providerIds.map((id)=>({
+                id,
+                label: labelsById?.[id] ?? ({
+                    lucide: 'Lucide',
+                    phosphor: 'Phosphor'
+                })[id] ?? id
+            })), [
         providerIds,
         labelsById
     ]);
@@ -57,16 +78,18 @@ export const IconSelectField = (props)=>{
         firstId
     ]);
     const activeProviderId = providerValue || firstId;
-    const activeClient = useMemo(()=>providers.find((p)=>p.id === activeProviderId) ?? providers[0], [
-        providers,
-        activeProviderId
+    const catalog = useIconCatalog(activeProviderId);
+    const activeProvider = providers.find((provider)=>provider.id === activeProviderId) ?? providers[0];
+    const activeClient = useMemo(()=>activeProvider ? catalogClient(activeProvider.id, activeProvider.label, catalog) : noopClient, [
+        activeProvider,
+        catalog
     ]);
     const [search, setSearch] = useState('');
     const [showPicker, setShowPicker] = useState(false);
     const [page, setPage] = useState(0);
     const [expandedCategory, setExpandedCategory] = useState(null);
     const dropdownRef = useRef(null);
-    const { matchingCategories, totalMatchingIcons } = useIconPickerSearch(activeClient ?? providers[0] ?? noopClient, search);
+    const { matchingCategories, totalMatchingIcons } = useIconPickerSearch(activeClient, search);
     const handleProviderChange = (nextId)=>{
         void setProvider(nextId);
         void setName('');
@@ -108,7 +131,7 @@ export const IconSelectField = (props)=>{
         activeClient
     ]);
     const expandedVariants = useMemo(()=>{
-        if (!expandedCategory || !activeClient) {
+        if (!expandedCategory) {
             return [];
         }
         const icons = categoryMap[expandedCategory] ?? [];
@@ -120,22 +143,12 @@ export const IconSelectField = (props)=>{
     }, [
         expandedCategory,
         search,
-        activeClient,
         categoryMap
-    ]);
-    const PreviewCmp = useMemo(()=>{
-        if (!nameValue || !activeClient) {
-            return null;
-        }
-        return activeClient.resolveIconComponent(nameValue);
-    }, [
-        activeClient,
-        nameValue
     ]);
     const required = fieldIsRequired(props);
     const { field } = props;
     const searchInputId = `${path}-icon-search`;
-    if (!activeClient) {
+    if (!activeProvider) {
         return /*#__PURE__*/ _jsx("div", {
             className: "icon-select-field",
             children: "No icon providers configured."
@@ -203,11 +216,15 @@ export const IconSelectField = (props)=>{
                                 className: "preview-provider-badge",
                                 children: activeClient.label
                             }),
-                            PreviewCmp ? /*#__PURE__*/ _jsx(PreviewCmp, {
+                            /*#__PURE__*/ _jsx(Icon, {
+                                icon: {
+                                    name: nameValue,
+                                    provider: activeProviderId
+                                },
                                 size: 32,
                                 strokeWidth: 1.5,
                                 weight: "regular"
-                            }) : null,
+                            }),
                             /*#__PURE__*/ _jsx("span", {
                                 className: "icon-name",
                                 children: nameValue

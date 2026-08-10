@@ -1,6 +1,6 @@
 # payload-plugin-icons
 
-An icon picker field for Payload 3. It stores an icon as `{ provider, name }` and includes a client component for rendering the stored value.
+An icon picker field for Payload 3. It stores `{ provider, name }`, discovers icons from the provider versions installed in your app, and renders provider-neutral serialized SVGs.
 
 ## Sponsor
 
@@ -18,7 +18,9 @@ An icon picker field for Payload 3. It stores an icon as `{ provider, name }` an
 - Searchable, paginated admin picker
 - Provider and icon preview in collection cells
 - Typed field data and React rendering component
-- Custom provider support
+- Server-side custom provider support
+- No Lucide or Phosphor modules in admin or frontend client bundles
+- Batched, cached picker previews
 
 ## Installation
 
@@ -53,6 +55,20 @@ export default buildConfig({
 })
 ```
 
+Configure `next.config` so provider packages are loaded natively only when an icon endpoint runs. (Lucide uses Node runtime loading because Next optimizes it by default; other providers are added to `serverExternalPackages`.)
+
+```ts
+import { withPayload } from '@payloadcms/next/withPayload'
+import { withPayloadIcons } from 'payload-plugin-icons'
+
+const nextConfig = {}
+
+export default withPayload(
+  withPayloadIcons(nextConfig),
+  { devBundleServerPackages: false },
+)
+```
+
 `packageImport` defaults to `payload-plugin-icons`. Set it when the package is exposed through a different monorepo alias:
 
 ```ts
@@ -68,7 +84,7 @@ payload generate:types
 
 ## Rendering an icon
 
-`Icon` is a Client Component because providers are resolved in the browser.
+`Icon` is a Client Component. It fetches a small serialized SVG definition from the plugin endpoint; provider packages stay on the server. Requests mounted in the same turn are automatically batched and definitions are shared in a module-level cache.
 
 ```tsx
 'use client'
@@ -81,7 +97,7 @@ export function FeatureIcon({ icon }: { icon?: IconData | null }) {
 }
 ```
 
-SVG props are passed to the selected icon. Phosphor's `weight` prop is also supported.
+SVG props and event handlers are applied to the outer `<svg>`. Phosphor's `weight` is included in the request and cache key.
 
 ## Customization
 
@@ -108,41 +124,33 @@ Field options:
 
 ### Custom providers
 
-A provider needs server metadata and a client factory. The client factory must resolve components synchronously from an eager import; per-icon lazy imports can create hundreds of requests while the picker is open.
-
-```tsx
-// icons/client.tsx
-'use client'
-
-import * as CustomIcons from '@acme/icon-library'
-import {
-  IconCell,
-  Icon,
-  IconSelectField,
-  registerIconProviderClientFactory,
-} from 'payload-plugin-icons/client'
-
-registerIconProviderClientFactory('custom', (id, label) => ({
-  id,
-  label,
-  getIconNames: () => ['Home'],
-  getCategoryMap: () => ({ Home: ['Home'] }),
-  getCategoryRepresentative: (category) => category,
-  resolveIconComponent: (name) =>
-    name === 'Home' ? CustomIcons.Home : null,
-}))
-
-export { Icon, IconCell, IconSelectField }
-```
-
-Point `packageImport` at a package or alias whose `/client` export is the module above, then register the same provider id on the server:
+A custom provider implements the server-only `IconProvider` contract. Keep its package import inside `loadCatalog` / `loadIcons`, serialize only validated names from your catalog, and add the package name to `withPayloadIcons`.
 
 ```ts
+import type { IconProvider } from 'payload-plugin-icons'
+import { createIconPlugin, serializeIconComponent } from 'payload-plugin-icons'
+
+const customProvider: IconProvider = {
+  id: 'custom',
+  label: 'Custom',
+  packageName: '@acme/icon-library',
+  async loadCatalog() {
+    return { provider: this.id, version: '1', icons: [{ name: 'Home' }] }
+  },
+  async loadIcons({ names }) {
+    const icons = await import('@acme/icon-library')
+    return Object.fromEntries(names.flatMap((name) =>
+      name === 'Home' ? [[name, serializeIconComponent(icons.Home)]] : [],
+    ))
+  },
+}
+
 const { iconField, iconPlugin } = createIconPlugin({
-  packageImport: '@acme/icons',
-  providers: [{ id: 'custom', label: 'Custom icons' }],
+  providers: [customProvider],
 })
 ```
+
+Call `withPayloadIcons(nextConfig, ['@acme/icon-library'])` for this provider.
 
 ## Development
 

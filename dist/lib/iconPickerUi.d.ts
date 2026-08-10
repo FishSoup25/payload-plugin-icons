@@ -1,8 +1,14 @@
 import { type ReactElement } from 'react';
-import type { IconProviderClient } from '../providers/types.js';
+export type IconProviderCatalogClient = {
+    getCategoryMap(): Record<string, string[]>;
+    getCategoryRepresentative(category: string): string;
+    getIconNames(): readonly string[];
+    id: string;
+    label: string;
+};
 declare const PAGE_SIZE = 100;
 export type IconPickerDropdownProps = {
-    client: IconProviderClient;
+    client: IconProviderCatalogClient;
     expandedCategory: null | string;
     expandedVariants: string[];
     matchingCategories: string[];
@@ -18,7 +24,7 @@ export type IconPickerDropdownProps = {
     totalPages: number;
 };
 export declare function IconPickerDropdown({ client, expandedCategory, expandedVariants, matchingCategories, onCloseVariants, onPageChange, onSelect, onToggleExpand, page, paginatedCategories, search, selectedValue, totalMatchingIcons, totalPages, }: IconPickerDropdownProps): ReactElement;
-export declare function useIconPickerSearch(client: IconProviderClient, search: string): {
+export declare function useIconPickerSearch(client: IconProviderCatalogClient, search: string): {
     matchingCategories: string[];
     totalMatchingIcons: number;
 };

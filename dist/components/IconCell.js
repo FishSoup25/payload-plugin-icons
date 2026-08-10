@@ -1,84 +1,45 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useMemo } from 'react';
-import { getProviderClientById } from '../providers/registry.js';
+import { Icon } from './Icon.js';
 import './IconCell.scss';
 function mergeCellProps(props) {
-    const nested = props.clientProps;
     return {
-        labelsById: props.labelsById ?? nested?.labelsById,
-        providerIds: props.providerIds ?? nested?.providerIds
+        labelsById: props.labelsById ?? props.clientProps?.labelsById,
+        providerIds: props.providerIds ?? props.clientProps?.providerIds
     };
 }
 function normalizeCellData(cellData) {
-    if (!cellData || typeof cellData !== 'object') {
-        return undefined;
-    }
-    if (!('provider' in cellData) || !('name' in cellData)) {
-        return undefined;
+    if (!cellData || typeof cellData !== 'object' || !('provider' in cellData) || !('name' in cellData)) {
+        return;
     }
     const { name, provider } = cellData;
-    if (typeof provider !== 'string' || typeof name !== 'string') {
-        return undefined;
-    }
-    return {
+    return typeof provider === 'string' && typeof name === 'string' ? {
         name,
         provider
-    };
+    } : undefined;
 }
 export const IconCell = (props)=>{
-    const { cellData } = props;
     const { labelsById } = mergeCellProps(props);
-    const data = normalizeCellData(cellData);
-    const client = useMemo(()=>{
-        if (!data?.provider) {
-            return undefined;
-        }
-        return getProviderClientById(data.provider, labelsById);
-    }, [
-        data?.provider,
-        labelsById
-    ]);
-    const Glyph = useMemo(()=>{
-        if (!client || !data?.name) {
-            return null;
-        }
-        return client.resolveIconComponent(data.name);
-    }, [
-        client,
-        data?.name
-    ]);
+    const data = normalizeCellData(props.cellData);
     if (!data?.name) {
         return /*#__PURE__*/ _jsx("span", {
             className: "icon-cell-empty",
             children: "—"
         });
     }
-    if (!client) {
-        return /*#__PURE__*/ _jsx("div", {
-            className: "icon-cell",
-            children: /*#__PURE__*/ _jsxs("span", {
-                className: "icon-cell-name",
-                children: [
-                    data.provider,
-                    ":",
-                    data.name
-                ]
-            })
-        });
-    }
     return /*#__PURE__*/ _jsxs("div", {
         className: "icon-cell",
         children: [
-            Glyph ? /*#__PURE__*/ _jsx(Glyph, {
+            /*#__PURE__*/ _jsx(Icon, {
+                icon: data,
                 size: 20,
                 strokeWidth: 1.5,
                 weight: "regular"
-            }) : null,
+            }),
             /*#__PURE__*/ _jsxs("span", {
                 className: "icon-cell-name",
                 children: [
-                    data.provider,
+                    labelsById?.[data.provider] ?? data.provider,
                     " · ",
                     data.name
                 ]

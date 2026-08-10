@@ -1,21 +1,32 @@
 import type { Config, Plugin } from 'payload'
 
+import type { IconProvider } from './providers/types.js'
 import type {
   CreateIconPluginOptions,
   CreateIconPluginResult,
   IconFieldOptions,
   IconPluginOptions,
-  IconProviderServerConfig,
 } from './types.js'
 
+import { createIconEndpoints } from './endpoints.js'
 import { iconField as buildIconField } from './fields/iconField.js'
 import { lucideProvider } from './providers/lucide/index.js'
 import { phosphorProvider } from './providers/phosphor/index.js'
 
 export { iconField } from './fields/iconField.js'
-
 export { lucideProvider } from './providers/lucide/index.js'
+
 export { phosphorProvider } from './providers/phosphor/index.js'
+export { serializeIconComponent } from './providers/serverUtils.js'
+export type {
+  IconCatalog,
+  IconCatalogEntry,
+  IconGlyphProps,
+  IconProvider,
+  IconRequest,
+  SerializedIcon,
+  SerializedSvgNode,
+} from './providers/types.js'
 export type {
   CreateIconPluginOptions,
   CreateIconPluginResult,
@@ -24,9 +35,10 @@ export type {
   IconPluginOptions,
   IconProviderServerConfig,
 } from './types.js'
-const defaultProviders = (): IconProviderServerConfig[] => [lucideProvider(), phosphorProvider()]
+export { withPayloadIcons } from './withPayloadIcons.js'
+const defaultProviders = (): IconProvider[] => [lucideProvider(), phosphorProvider()]
 
-function validateProviders(providers: IconProviderServerConfig[]): void {
+function validateProviders(providers: IconProvider[]): void {
   if (providers.length === 0) {
     throw new Error('[payload-plugin-icons] at least one provider is required')
   }
@@ -43,8 +55,12 @@ function validateProviders(providers: IconProviderServerConfig[]): void {
  * Use `createIconPlugin` to keep this configuration in sync with icon fields.
  */
 export function iconPlugin(pluginOptions: IconPluginOptions = {}): Plugin {
-  validateProviders(pluginOptions.providers ?? defaultProviders())
-  return (config: Config): Config => config
+  const providers = pluginOptions.providers ?? defaultProviders()
+  validateProviders(providers)
+  return (config: Config): Config => ({
+    ...config,
+    endpoints: [...(config.endpoints ?? []), ...createIconEndpoints(providers)],
+  })
 }
 
 /**

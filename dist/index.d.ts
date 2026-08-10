@@ -3,7 +3,10 @@ import type { CreateIconPluginOptions, CreateIconPluginResult, IconPluginOptions
 export { iconField } from './fields/iconField.js';
 export { lucideProvider } from './providers/lucide/index.js';
 export { phosphorProvider } from './providers/phosphor/index.js';
+export { serializeIconComponent } from './providers/serverUtils.js';
+export type { IconCatalog, IconCatalogEntry, IconGlyphProps, IconProvider, IconRequest, SerializedIcon, SerializedSvgNode, } from './providers/types.js';
 export type { CreateIconPluginOptions, CreateIconPluginResult, IconData, IconFieldOptions, IconPluginOptions, IconProviderServerConfig, } from './types.js';
+export { withPayloadIcons } from './withPayloadIcons.js';
 /**
  * Payload plugin that validates the configured icon providers.
  * Use `createIconPlugin` to keep this configuration in sync with icon fields.

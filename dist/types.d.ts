@@ -1,9 +1,8 @@
 import type { Field, GroupField, Plugin } from 'payload';
+import type { IconProvider } from './providers/types.js';
 /** Server-side metadata for an icon provider. */
-export type IconProviderServerConfig = {
-    id: string;
-    label: string;
-};
+/** @deprecated Use `IconProvider`. */
+export type IconProviderServerConfig = IconProvider;
 /** Value stored for an icon in the database (group field shape). */
 export type IconData = {
     name?: null | string;
@@ -30,7 +29,7 @@ export type IconFieldOptions = {
     required?: boolean;
 };
 export type IconPluginOptions = {
-    providers?: IconProviderServerConfig[];
+    providers?: IconProvider[];
 };
 export type CreateIconPluginOptions = {
     /** Package name or alias used in Payload's generated admin import map. */

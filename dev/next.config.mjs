@@ -1,4 +1,5 @@
 import { withPayload } from '@payloadcms/next/withPayload'
+import { withPayloadIcons } from 'payload-plugin-icons'
 import { fileURLToPath } from 'url'
 import path from 'path'
 
@@ -6,9 +7,6 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    optimizePackageImports: ['@phosphor-icons/react', 'lucide-react'],
-  },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],
@@ -20,4 +18,4 @@ const nextConfig = {
   },
 }
 
-export default withPayload(nextConfig, { devBundleServerPackages: false })
+export default withPayload(withPayloadIcons(nextConfig), { devBundleServerPackages: false })

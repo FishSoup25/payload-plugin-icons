@@ -1,9 +1,12 @@
+import { createIconEndpoints } from './endpoints.js';
 import { iconField as buildIconField } from './fields/iconField.js';
 import { lucideProvider } from './providers/lucide/index.js';
 import { phosphorProvider } from './providers/phosphor/index.js';
 export { iconField } from './fields/iconField.js';
 export { lucideProvider } from './providers/lucide/index.js';
 export { phosphorProvider } from './providers/phosphor/index.js';
+export { serializeIconComponent } from './providers/serverUtils.js';
+export { withPayloadIcons } from './withPayloadIcons.js';
 const defaultProviders = ()=>[
         lucideProvider(),
         phosphorProvider()
@@ -23,8 +26,15 @@ function validateProviders(providers) {
  * Payload plugin that validates the configured icon providers.
  * Use `createIconPlugin` to keep this configuration in sync with icon fields.
  */ export function iconPlugin(pluginOptions = {}) {
-    validateProviders(pluginOptions.providers ?? defaultProviders());
-    return (config)=>config;
+    const providers = pluginOptions.providers ?? defaultProviders();
+    validateProviders(providers);
+    return (config)=>({
+            ...config,
+            endpoints: [
+                ...config.endpoints ?? [],
+                ...createIconEndpoints(providers)
+            ]
+        });
 }
 /**
  * Returns a matched pair of `iconPlugin` and `iconField` so provider ids/labels stay in sync.

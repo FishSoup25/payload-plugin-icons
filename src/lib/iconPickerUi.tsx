@@ -2,28 +2,33 @@
 
 import { type ReactElement, useMemo } from 'react'
 
-import type { IconProviderClient } from '../providers/types.js'
+import type { SerializedIcon } from '../providers/types.js'
+
+import { SerializedIconSvg } from '../components/Icon.js'
+import { useIconDefinitions } from '../providers/clientApi.js'
+
+export type IconProviderCatalogClient = {
+  getCategoryMap(): Record<string, string[]>
+  getCategoryRepresentative(category: string): string
+  getIconNames(): readonly string[]
+  id: string
+  label: string
+}
 
 const PAGE_SIZE = 100
 
 function PickerGlyph({
-  client,
-  iconName,
+  definition,
   size,
 }: {
-  client: IconProviderClient
-  iconName: string
+  definition?: SerializedIcon
   size: number
 }): null | ReactElement {
-  const Cmp = useMemo(() => client.resolveIconComponent(iconName), [client, iconName])
-  if (!Cmp) {
-    return null
-  }
-  return <Cmp size={size} strokeWidth={1.5} weight="regular" />
+  return definition ? <SerializedIconSvg definition={definition} size={size} strokeWidth={1.5} /> : null
 }
 
 export type IconPickerDropdownProps = {
-  client: IconProviderClient
+  client: IconProviderCatalogClient
   expandedCategory: null | string
   expandedVariants: string[]
   matchingCategories: string[]
@@ -43,6 +48,7 @@ function IconCategoryCell({
   category,
   categoryMap,
   client,
+  definitions,
   expandedCategory,
   onSelect,
   onToggleExpand,
@@ -50,7 +56,8 @@ function IconCategoryCell({
 }: {
   category: string
   categoryMap: Record<string, string[]>
-  client: IconProviderClient
+  client: IconProviderCatalogClient
+  definitions: Record<string, SerializedIcon>
   expandedCategory: null | string
   onSelect: (iconName: string) => void
   onToggleExpand: (category: string) => void
@@ -69,7 +76,7 @@ function IconCategoryCell({
         title={`Select "${representative}"`}
         type="button"
       >
-        <PickerGlyph client={client} iconName={representative} size={24} />
+        <PickerGlyph definition={definitions[representative]} size={24} />
         <span className="icon-option-name">{category}</span>
       </button>
       {hasVariants && (
@@ -88,14 +95,14 @@ function IconCategoryCell({
 
 function IconVariantsPanel({
   category,
-  client,
+  definitions,
   onClose,
   onSelect,
   selectedValue,
   variants,
 }: {
   category: string
-  client: IconProviderClient
+  definitions: Record<string, SerializedIcon>
   onClose: () => void
   onSelect: (iconName: string) => void
   selectedValue: string
@@ -121,7 +128,7 @@ function IconVariantsPanel({
             title={iconName}
             type="button"
           >
-            <PickerGlyph client={client} iconName={iconName} size={24} />
+            <PickerGlyph definition={definitions[iconName]} size={24} />
             <span className="icon-option-name">{iconName}</span>
           </button>
         ))}
@@ -147,6 +154,11 @@ export function IconPickerDropdown({
   totalPages,
 }: IconPickerDropdownProps): ReactElement {
   const categoryMap = useMemo(() => client.getCategoryMap(), [client])
+  const visibleNames = useMemo(() => [
+    ...paginatedCategories.map((category) => client.getCategoryRepresentative(category)),
+    ...expandedVariants,
+  ], [client, expandedVariants, paginatedCategories])
+  const definitions = useIconDefinitions(client.id, visibleNames, 'regular')
 
   return (
     <div className="icon-picker-dropdown">
@@ -185,6 +197,7 @@ export function IconPickerDropdown({
             category={category}
             categoryMap={categoryMap}
             client={client}
+            definitions={definitions}
             expandedCategory={expandedCategory}
             key={category}
             onSelect={onSelect}
@@ -197,7 +210,7 @@ export function IconPickerDropdown({
       {expandedCategory && (
         <IconVariantsPanel
           category={expandedCategory}
-          client={client}
+          definitions={definitions}
           onClose={onCloseVariants}
           onSelect={onSelect}
           selectedValue={selectedValue}
@@ -212,7 +225,7 @@ export function IconPickerDropdown({
   )
 }
 
-export function useIconPickerSearch(client: IconProviderClient, search: string) {
+export function useIconPickerSearch(client: IconProviderCatalogClient, search: string) {
   return useMemo(() => {
     const categoryMap = client.getCategoryMap()
     const allCategoryKeys = Object.keys(categoryMap).sort()
