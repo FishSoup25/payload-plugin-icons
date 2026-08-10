@@ -33,8 +33,7 @@ export const IconCell = (props)=>{
             /*#__PURE__*/ _jsx(Icon, {
                 icon: data,
                 size: 20,
-                strokeWidth: 1.5,
-                weight: "regular"
+                strokeWidth: 1.5
             }),
             /*#__PURE__*/ _jsxs("span", {
                 className: "icon-cell-name",

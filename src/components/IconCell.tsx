@@ -35,7 +35,7 @@ export const IconCell = (props: IconCellProps): ReactElement => {
   if (!data?.name) {return <span className="icon-cell-empty">—</span>}
   return (
     <div className="icon-cell">
-      <Icon icon={data} size={20} strokeWidth={1.5} weight="regular" />
+      <Icon icon={data} size={20} strokeWidth={1.5} />
       <span className="icon-cell-name">
         {labelsById?.[data.provider] ?? data.provider} · {data.name}
       </span>

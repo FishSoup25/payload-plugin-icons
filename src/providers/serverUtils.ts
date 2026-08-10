@@ -72,13 +72,17 @@ function validNode(value: unknown, depth: number): value is SerializedSvgNode {
 
 type ElementTree = { props: Record<string, unknown>; type: unknown }
 type Renderable = { render: (props: Record<string, unknown>, ref: null) => unknown }
+type WrappedComponent = { type: unknown }
 
-function invoke(component: unknown, props: Record<string, unknown>): ElementTree {
+function invoke(component: unknown, props: Record<string, unknown>, depth = 0): ElementTree {
+  if (depth > 8) {throw new Error('Provider icon component wrapper depth exceeded')}
   let result: unknown
   if (typeof component === 'function') {
     result = component(props)
   } else if (component && typeof component === 'object' && 'render' in component) {
     result = (component as Renderable).render(props, null)
+  } else if (component && typeof component === 'object' && 'type' in component) {
+    return invoke((component as WrappedComponent).type, props, depth + 1)
   }
   if (!result || typeof result !== 'object' || !('type' in result) || !('props' in result)) {
     throw new Error('Provider icon did not return a React element')

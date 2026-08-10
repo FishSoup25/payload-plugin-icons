@@ -41,7 +41,7 @@ const noopClient: IconProviderCatalogClient = {
 }
 
 function catalogClient(id: string, label: string, catalog?: IconCatalog): IconProviderCatalogClient {
-  const categoryMap: Record<string, string[]> = {}
+  const categoryMap: Record<string, string[]> = Object.create(null) as Record<string, string[]>
   for (const icon of catalog?.icons ?? []) {
     const category = icon.category ?? icon.name
     categoryMap[category] ??= []
@@ -240,7 +240,6 @@ export const IconSelectField: GroupFieldClientComponent = (props) => {
               icon={{ name: nameValue, provider: activeProviderId }}
               size={32}
               strokeWidth={1.5}
-              weight="regular"
             />
             <span className="icon-name">{nameValue}</span>
             {!readOnly && (

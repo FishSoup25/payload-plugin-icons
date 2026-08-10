@@ -10,7 +10,8 @@ async function loadBaseCatalog() {
         const mod = await loadModule();
         const exportsByName = new Map();
         for (const key of Object.keys(mod).sort()){
-            if (!key.endsWith('Icon') || !isIconComponent(mod[key])) {
+            // Lucide also exports the lower-case createLucideIcon factory. It is not an icon component.
+            if (!/^[A-Z].*Icon$/.test(key) || !isIconComponent(mod[key])) {
                 continue;
             }
             const name = pascalToKebab(key.slice(0, -4));

@@ -15,7 +15,7 @@ const noopClient = {
     label: 'noop'
 };
 function catalogClient(id, label, catalog) {
-    const categoryMap = {};
+    const categoryMap = Object.create(null);
     for (const icon of catalog?.icons ?? []){
         const category = icon.category ?? icon.name;
         categoryMap[category] ??= [];
@@ -222,8 +222,7 @@ export const IconSelectField = (props)=>{
                                     provider: activeProviderId
                                 },
                                 size: 32,
-                                strokeWidth: 1.5,
-                                weight: "regular"
+                                strokeWidth: 1.5
                             }),
                             /*#__PURE__*/ _jsx("span", {
                                 className: "icon-name",

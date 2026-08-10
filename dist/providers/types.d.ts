@@ -36,5 +36,6 @@ export interface IconProvider {
     label: string;
     loadCatalog(): Promise<IconCatalog>;
     loadIcons(request: IconRequest): Promise<Record<string, SerializedIcon>>;
-    packageName: string;
+    /** External provider package metadata, when the adapter uses one. */
+    packageName?: string;
 }

@@ -99,7 +99,7 @@ export function createIconEndpoints(providers) {
                             error: 'Request contains an unknown icon name'
                         }, 400);
                     }
-                    if (body.weight && !catalog.weights?.includes(body.weight)) {
+                    if (body.weight && catalog.weights && !catalog.weights.includes(body.weight)) {
                         return json({
                             error: 'Request contains an invalid weight'
                         }, 400);

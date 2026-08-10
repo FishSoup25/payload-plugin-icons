@@ -113,7 +113,7 @@ export function IconPickerDropdown({ client, expandedCategory, expandedVariants,
         expandedVariants,
         paginatedCategories
     ]);
-    const definitions = useIconDefinitions(client.id, visibleNames, 'regular');
+    const definitions = useIconDefinitions(client.id, visibleNames);
     return /*#__PURE__*/ _jsxs("div", {
         className: "icon-picker-dropdown",
         children: [

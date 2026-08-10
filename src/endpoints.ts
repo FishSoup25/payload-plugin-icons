@@ -70,7 +70,7 @@ export function createIconEndpoints(providers: IconProvider[]): Endpoint[] {
           if (names.some((name) => !validNames.has(name))) {
             return json({ error: 'Request contains an unknown icon name' }, 400)
           }
-          if (body.weight && !catalog.weights?.includes(body.weight)) {
+          if (body.weight && catalog.weights && !catalog.weights.includes(body.weight)) {
             return json({ error: 'Request contains an invalid weight' }, 400)
           }
           const request: IconRequest = {

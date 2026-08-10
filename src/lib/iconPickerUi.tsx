@@ -158,7 +158,7 @@ export function IconPickerDropdown({
     ...paginatedCategories.map((category) => client.getCategoryRepresentative(category)),
     ...expandedVariants,
   ], [client, expandedVariants, paginatedCategories])
-  const definitions = useIconDefinitions(client.id, visibleNames, 'regular')
+  const definitions = useIconDefinitions(client.id, visibleNames)
 
   return (
     <div className="icon-picker-dropdown">

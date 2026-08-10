@@ -67,12 +67,17 @@ function validNode(value, depth) {
     const node = value;
     return typeof node.tag === 'string' && SAFE_TAGS.has(node.tag) && validAttributes(node.attributes, false) && (node.children === undefined || Array.isArray(node.children) && node.children.length <= 256 && node.children.every((child)=>validNode(child, depth + 1)));
 }
-function invoke(component, props) {
+function invoke(component, props, depth = 0) {
+    if (depth > 8) {
+        throw new Error('Provider icon component wrapper depth exceeded');
+    }
     let result;
     if (typeof component === 'function') {
         result = component(props);
     } else if (component && typeof component === 'object' && 'render' in component) {
         result = component.render(props, null);
+    } else if (component && typeof component === 'object' && 'type' in component) {
+        return invoke(component.type, props, depth + 1);
     }
     if (!result || typeof result !== 'object' || !('type' in result) || !('props' in result)) {
         throw new Error('Provider icon did not return a React element');
