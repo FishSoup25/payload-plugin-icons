@@ -1,10 +1,13 @@
-import type { ComponentType } from 'react'
+import type { renderToStaticMarkup } from 'react-dom/server'
 
 import { createRequire } from 'node:module'
+import { type ComponentType, createElement } from 'react'
 
 import type { IconGlyphProps, SerializedIcon, SerializedSvgNode } from './types.js'
 
 const require = createRequire(import.meta.url)
+type ServerRenderer = { renderToStaticMarkup: typeof renderToStaticMarkup }
+const serverRenderer = Reflect.apply(require, undefined, [['react-dom', 'server'].join('/')]) as ServerRenderer
 // Next compiles literal imports (and Lucide's full export graph); keep this fixed server loader opaque.
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
 const nativeImport = Function('specifier', 'return import(specifier)') as (
@@ -70,51 +73,102 @@ function validNode(value: unknown, depth: number): value is SerializedSvgNode {
     ))
 }
 
-type ElementTree = { props: Record<string, unknown>; type: unknown }
-type Renderable = { render: (props: Record<string, unknown>, ref: null) => unknown }
-type WrappedComponent = { type: unknown }
-
-function invoke(component: unknown, props: Record<string, unknown>, depth = 0): ElementTree {
-  if (depth > 8) {throw new Error('Provider icon component wrapper depth exceeded')}
-  let result: unknown
-  if (typeof component === 'function') {
-    result = component(props)
-  } else if (component && typeof component === 'object' && 'render' in component) {
-    result = (component as Renderable).render(props, null)
-  } else if (component && typeof component === 'object' && 'type' in component) {
-    return invoke((component as WrappedComponent).type, props, depth + 1)
-  }
-  if (!result || typeof result !== 'object' || !('type' in result) || !('props' in result)) {
-    throw new Error('Provider icon did not return a React element')
-  }
-  return result as ElementTree
+type RenderedNode = {
+  attributes: Record<string, string>
+  children: RenderedNode[]
+  tag: string
 }
 
-function unwrapSvg(Component: ComponentType<IconGlyphProps>, props: IconGlyphProps): ElementTree {
-  let element = invoke(Component, props as Record<string, unknown>)
-  for (let depth = 0; depth < 8 && element.type !== 'svg'; depth++) {
-    element = invoke(element.type, element.props)
-  }
-  if (element.type !== 'svg') {throw new Error('Provider icon did not return an SVG root')}
-  return element
+function decodeHtml(value: string): string {
+  return value.replace(/&(#(?:x[\da-f]+|\d+)|amp|apos|gt|lt|quot);/gi, (entity, code: string) => {
+    if (code[0] === '#') {
+      const hex = code[1]?.toLowerCase() === 'x'
+      const number = Number.parseInt(code.slice(hex ? 2 : 1), hex ? 16 : 10)
+      if (!Number.isSafeInteger(number) || number < 0 || number > 0x10FFFF) {
+        throw new Error('Provider icon contains an invalid character reference')
+      }
+      return String.fromCodePoint(number)
+    }
+    return ({ amp: '&', apos: "'", gt: '>', lt: '<', quot: '"' } as Record<string, string>)[code.toLowerCase()] ?? entity
+  })
 }
 
-function serializeChildren(value: unknown): SerializedSvgNode[] {
-  if (Array.isArray(value)) {return value.flatMap(serializeChildren)}
-  if (!value || typeof value !== 'object' || !('type' in value) || !('props' in value)) {return []}
-  const element = value as ElementTree
-  if (typeof element.type === 'symbol') {return serializeChildren(element.props.children)}
-  if (typeof element.type !== 'string') {
-    return serializeChildren(invoke(element.type, element.props))
+function renderedAttributes(source: string): Record<string, string> {
+  const attributes: Record<string, string> = {}
+  let rest = source.trim()
+  while (rest) {
+    const match = /^([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')\s*/.exec(rest)
+    if (!match) {throw new Error('Provider icon rendered an invalid SVG attribute')}
+    attributes[match[1]] = decodeHtml(match[2] ?? match[3] ?? '')
+    rest = rest.slice(match[0].length)
   }
-  const tag = element.type.toLowerCase()
-  if (!SAFE_TAGS.has(tag)) {throw new Error(`Provider icon contains unsupported SVG element: ${tag}`)}
-  const children = serializeChildren(element.props.children)
-  return [{
-    attributes: parseAttributes(element.props),
+  return attributes
+}
+
+function parseRenderedSvg(markup: string): RenderedNode {
+  if (markup.length > 1_000_000) {throw new Error('Provider icon SVG is too large')}
+  const stack: RenderedNode[] = []
+  let root: RenderedNode | undefined
+  let position = 0
+  while (position < markup.length) {
+    const openingBracket = markup.indexOf('<', position)
+    if (openingBracket < 0) {
+      if (markup.slice(position).trim()) {throw new Error('Provider icon SVG cannot contain text')}
+      break
+    }
+    if (markup.slice(position, openingBracket).trim()) {
+      throw new Error('Provider icon SVG cannot contain text')
+    }
+    if (markup.startsWith('<!--', openingBracket)) {
+      const commentEnd = markup.indexOf('-->', openingBracket + 4)
+      if (commentEnd < 0) {throw new Error('Provider icon rendered an invalid comment')}
+      position = commentEnd + 3
+      continue
+    }
+    const closingBracket = markup.indexOf('>', openingBracket + 1)
+    if (closingBracket < 0) {throw new Error('Provider icon rendered invalid SVG markup')}
+    const token = markup.slice(openingBracket, closingBracket + 1)
+    position = closingBracket + 1
+    const closing = /^<\/([a-z][\w:-]*)\s*>$/i.exec(token)
+    if (closing) {
+      const node = stack.pop()
+      if (!node || node.tag !== closing[1].toLowerCase()) {
+        throw new Error('Provider icon rendered mismatched SVG tags')
+      }
+      continue
+    }
+    const selfClosing = token.endsWith('/>')
+    const body = token.slice(1, selfClosing ? -2 : -1).trim()
+    const separator = body.search(/\s/)
+    const tag = (separator < 0 ? body : body.slice(0, separator)).toLowerCase()
+    if (!/^[a-z][\w:-]*$/i.test(tag)) {throw new Error('Provider icon rendered invalid SVG markup')}
+    const node: RenderedNode = {
+      attributes: renderedAttributes(separator < 0 ? '' : body.slice(separator + 1)),
+      children: [],
+      tag,
+    }
+    const parent = stack.at(-1)
+    if (parent) {parent.children.push(node)}
+    else if (!root) {root = node}
+    else {throw new Error('Provider icon must render one SVG root')}
+    if (!selfClosing) {stack.push(node)}
+  }
+  if (!root || stack.length > 0 || root.tag !== 'svg') {
+    throw new Error('Provider icon did not render a valid SVG root')
+  }
+  return root
+}
+
+function serializeRenderedNode(node: RenderedNode): SerializedSvgNode {
+  if (!SAFE_TAGS.has(node.tag)) {
+    throw new Error(`Provider icon contains unsupported SVG element: ${node.tag}`)
+  }
+  const children = node.children.map(serializeRenderedNode)
+  return {
+    attributes: parseAttributes(node.attributes),
     children: children.length > 0 ? children : undefined,
-    tag,
-  }]
+    tag: node.tag,
+  }
 }
 
 export function isSerializedIcon(value: unknown): value is SerializedIcon {
@@ -129,12 +183,12 @@ export function isSerializedIcon(value: unknown): value is SerializedIcon {
 
 /** Convert provider output to a small, validated structure safe for the client renderer. */
 export function serializeIconComponent(Component: ComponentType<IconGlyphProps>, props: IconGlyphProps = {}): SerializedIcon {
-  const svg = unwrapSvg(Component, props)
-  const viewBox = svg.props.viewBox
+  const svg = parseRenderedSvg(serverRenderer.renderToStaticMarkup(createElement(Component, props)))
+  const viewBox = svg.attributes.viewBox
   if (typeof viewBox !== 'string') {throw new Error('Provider icon SVG is missing a viewBox')}
   return {
-    attributes: parseAttributes(svg.props, true),
-    nodes: serializeChildren(svg.props.children),
+    attributes: parseAttributes(svg.attributes, true),
+    nodes: svg.children.map(serializeRenderedNode),
     viewBox,
   }
 }

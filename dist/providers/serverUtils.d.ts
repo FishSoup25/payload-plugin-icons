@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { type ComponentType } from 'react';
 import type { IconGlyphProps, SerializedIcon } from './types.js';
 export declare function getPackageVersion(packageName: string): string;
 /** Load a fixed provider package through Node so bundlers never traverse its export graph. */
