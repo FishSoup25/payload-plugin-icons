@@ -69,6 +69,37 @@ export default withPayload(
 )
 ```
 
+### Standalone and Docker deployments
+
+Next.js output tracing cannot discover the provider packages because the plugin loads them through opaque runtime imports. This does not affect `next dev` or a conventional `next start` deployment where the project's complete `node_modules` remains available. However, `output: 'standalone'` copies only files discovered by output tracing into `.next/standalone`.
+
+Explicitly include each configured provider package when building a standalone deployment:
+
+```ts
+import { withPayload } from '@payloadcms/next/withPayload'
+import type { NextConfig } from 'next'
+import { withPayloadIcons } from 'payload-plugin-icons'
+
+const nextConfig: NextConfig = {
+  output: 'standalone',
+  outputFileTracingIncludes: {
+    '/*': [
+      './node_modules/lucide-react/**/*',
+      './node_modules/@phosphor-icons/react/**/*',
+    ],
+  },
+}
+
+export default withPayload(
+  withPayloadIcons(nextConfig),
+  { devBundleServerPackages: false },
+)
+```
+
+If the plugin is configured with only one built-in provider, include only that provider's package. Add equivalent patterns for custom provider packages. Patterns are resolved from the Next.js project root; monorepos may also need Next.js's `outputFileTracingRoot` setting.
+
+`withPayloadIcons` configures provider packages for native server loading, but opaque runtime imports still require these explicit tracing includes in standalone builds.
+
 `packageImport` defaults to `payload-plugin-icons`. Set it when the package is exposed through a different monorepo alias:
 
 ```ts
@@ -151,6 +182,14 @@ const { iconField, iconPlugin } = createIconPlugin({
 ```
 
 Call `withPayloadIcons(nextConfig, ['@acme/icon-library'])` for this provider.
+
+## Troubleshooting
+
+### Icon endpoints return 500 only in standalone or Docker
+
+If `/api/payload-icons/:provider/catalog` or `/api/payload-icons/:provider/icons` works in development but returns `500` from a container that copies only `.next/standalone`, the provider package was probably omitted by Next.js output tracing. The endpoint may report that it is unable to load the icon catalog or icons.
+
+Add the provider package to `outputFileTracingIncludes` as shown in [Standalone and Docker deployments](#standalone-and-docker-deployments), rebuild the image, and confirm that its directory exists under the deployed `node_modules`. A typical standalone image copies `.next/standalone` and `.next/static`; copying `.next/static` does not add missing server dependencies.
 
 ## Development
 
