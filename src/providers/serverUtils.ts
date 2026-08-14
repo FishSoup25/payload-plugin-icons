@@ -26,10 +26,6 @@ export function loadPackageModule(packageName: string): Promise<Record<string, u
 export function isIconComponent(value: unknown): value is ComponentType<IconGlyphProps> {
   return typeof value === 'function' || Boolean(value && typeof value === 'object' && '$$typeof' in value)
 }
-export function pascalToKebab(value: string): string {
-  return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2').toLowerCase()
-}
-
 function isSafeAttribute(name: string, outer: boolean): boolean {
   if (/^on/i.test(name) || name === 'style' || name.includes(':')) {return false}
   const shape = /^(?:c[xy]|[dxy]|height|opacity|points|r[xy]?|transform|width|x[12]|y[12])$/

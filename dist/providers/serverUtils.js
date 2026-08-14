@@ -32,9 +32,6 @@ export function getPackageVersion(packageName) {
 export function isIconComponent(value) {
     return typeof value === 'function' || Boolean(value && typeof value === 'object' && '$$typeof' in value);
 }
-export function pascalToKebab(value) {
-    return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2').toLowerCase();
-}
 function isSafeAttribute(name, outer) {
     if (/^on/i.test(name) || name === 'style' || name.includes(':')) {
         return false;

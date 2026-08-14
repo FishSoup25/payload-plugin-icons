@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { createElement, memo } from 'react'
+import dynamicIconImports from 'lucide-react/dynamicIconImports.mjs'
 
 import { lucideProvider, phosphorProvider, serializeIconComponent } from '../dist/index.js'
 import { createIconEndpoints } from '../dist/endpoints.js'
@@ -11,9 +12,22 @@ assert.equal(lucideCatalog.provider, 'lucide')
 assert.ok(lucideCatalog.icons.length > 1_000)
 assert.ok(lucideCatalog.icons.some(({ name }) => name === 'house'))
 assert.ok(!lucideCatalog.icons.some(({ name }) => name === 'create-lucide'))
-const lucideIcons = await lucide.loadIcons({ names: ['house', 'map-pin'] })
+const lucideNames = lucideCatalog.icons.map(({ name }) => name)
+assert.deepEqual(lucideNames, Object.keys(dynamicIconImports).sort())
+for (const name of ['building-2', 'arrow-down-0-1', 'arrow-down-01', 'axis-3d', 'axis-3-d']) {
+  assert.ok(lucideNames.includes(name))
+}
+for (const name of ['building2', 'arrow-down01', 'axis3-d']) {
+  assert.ok(!lucideNames.includes(name))
+}
+const lucideIcons = await lucide.loadIcons({
+  names: ['house', 'map-pin', 'building-2', 'arrow-down-0-1', 'arrow-down-01', 'axis-3d', 'axis-3-d'],
+})
 assert.equal(lucideIcons.house.viewBox, '0 0 24 24')
 assert.ok(lucideIcons.house.nodes.length > 0)
+assert.equal(lucideIcons['building-2'].viewBox, '0 0 24 24')
+assert.deepEqual(lucideIcons['arrow-down-0-1'], lucideIcons['arrow-down-01'])
+assert.deepEqual(lucideIcons['axis-3d'], lucideIcons['axis-3-d'])
 for (let offset = 0; offset < lucideCatalog.icons.length; offset += 100) {
   const names = lucideCatalog.icons.slice(offset, offset + 100).map(({ name }) => name)
   const icons = await lucide.loadIcons({ names })
@@ -32,6 +46,31 @@ const lucideIconResponse = await lucideIconEndpoint.handler(new Request(
 ))
 assert.equal(lucideIconResponse.status, 200)
 assert.ok((await lucideIconResponse.json()).house)
+
+const mixedLucideIconResponse = await lucideIconEndpoint.handler(new Request(
+  'http://localhost/api/payload-icons/lucide/icons',
+  {
+    body: JSON.stringify({ names: ['building-2', 'hotel', 'not-an-icon'] }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  },
+))
+assert.equal(mixedLucideIconResponse.status, 200)
+assert.deepEqual(
+  Object.keys(await mixedLucideIconResponse.json()).sort(),
+  ['building-2', 'hotel'],
+)
+
+const unknownLucideIconResponse = await lucideIconEndpoint.handler(new Request(
+  'http://localhost/api/payload-icons/lucide/icons',
+  {
+    body: JSON.stringify({ names: ['not-an-icon'] }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  },
+))
+assert.equal(unknownLucideIconResponse.status, 200)
+assert.deepEqual(await unknownLucideIconResponse.json(), {})
 
 const MemoIcon = memo(() => createElement(
   'svg',

@@ -94,22 +94,21 @@ export function createIconEndpoints(providers) {
                 try {
                     const catalog = await provider.loadCatalog();
                     const validNames = new Set(catalog.icons.map(({ name })=>name));
-                    if (names.some((name)=>!validNames.has(name))) {
-                        return json({
-                            error: 'Request contains an unknown icon name'
-                        }, 400);
-                    }
+                    const knownNames = names.filter((name)=>validNames.has(name));
                     if (body.weight && catalog.weights && !catalog.weights.includes(body.weight)) {
                         return json({
                             error: 'Request contains an invalid weight'
                         }, 400);
                     }
+                    if (knownNames.length === 0) {
+                        return json({});
+                    }
                     const request = {
-                        names,
+                        names: knownNames,
                         weight: body.weight
                     };
                     const icons = await provider.loadIcons(request);
-                    if (Object.entries(icons).some(([name, icon])=>!names.includes(name) || !isSerializedIcon(icon))) {
+                    if (Object.entries(icons).some(([name, icon])=>!knownNames.includes(name) || !isSerializedIcon(icon))) {
                         return json({
                             error: 'Provider returned an invalid SVG definition'
                         }, 500);
